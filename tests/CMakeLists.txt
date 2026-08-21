@@ -14,3 +14,8 @@ esimd_add_isa_target(esimd_test_avx AVX
   SOURCES test_avx.cpp
   LINKS   GTest::gtest_main
   LABELS  avx)
+
+esimd_add_isa_target(esimd_test_avx2 AVX2
+  SOURCES test_avx2.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx2)

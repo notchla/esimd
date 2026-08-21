@@ -1,4 +1,4 @@
-// Copyright 2009-2021 Intel Corporation
+// Copyright 2026 notchla liso.lorenzo@gmail.com
 // SPDX-License-Identifier: Apache-2.0
 //
 // Representative micro-benchmarks for the SSE (4-wide) types. These track

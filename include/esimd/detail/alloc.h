@@ -1,4 +1,5 @@
 // Copyright 2009-2021 Intel Corporation
+// Copyright 2026 notchla liso.lorenzo@gmail.com
 // SPDX-License-Identifier: Apache-2.0
 //
 // Header-only replacement for embree's common/sys/alloc.h. The upstream header
