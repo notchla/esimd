@@ -9,3 +9,6 @@ add_subdirectory(sse)
 add_subdirectory(avx)
 add_subdirectory(avx2)
 add_subdirectory(avx512)
+
+# Width-agnostic showcase (vfloatx / VSIZEX): the same source built for every ISA.
+add_subdirectory(portable)

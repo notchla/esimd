@@ -11,10 +11,17 @@ whole point of these folders: same source, different `-m`/`-D` flags → differe
 | `avx/`     | `vfloat8`, `vdouble4` (256-bit)             | `-mavx -mbmi -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__BMI__` |
 | `avx2/`    | `vint8`, `vuint8`, `vllong4` (native int)   | `-mavx2 -mfma -mf16c -mbmi -mbmi2 -mlzcnt -D__AVX2__ -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__LZCNT__ -D__BMI__` |
 | `avx512/`  | `vfloat16`, `vdouble8`, `vboolf16` masks    | `-march=skylake-avx512 -mavx2 -mfma -mf16c -mbmi -mbmi2 -mlzcnt -D__AVX512F__ -D__AVX512VL__ -D__AVX512DQ__ -D__AVX512BW__ -D__AVX2__ -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__LZCNT__ -D__BMI__` |
+| `portable/`| `vfloatx`, `vintx`, `vboolx`, `VSIZEX`       | *any* of the rows above — the same source builds for every ISA |
 
 The `-m` flags tell the compiler which instructions it may emit; the matching `-D`
 macros tell the esimd headers which backend to expose. They must agree — esimd's
 CMake pairs them for you in `ESIMD_FLAGS_<ISA>`.
+
+The `portable/` example is the exception to "one per instruction set": it names **no**
+fixed width. It uses the default-width aliases (`vfloatx` = `vfloat<VSIZEX>`, etc.), so
+the *same source* is compiled once per ISA and processes a different lane count each
+time — `VSIZEX` is 4 under SSE and 8 under AVX/AVX2/AVX512. It demonstrates the
+canonical pattern: a `VSIZEX`-wide loop with a masked remainder for the array tail.
 
 ## Build & run — with CMake (part of the main build)
 
@@ -25,6 +32,9 @@ cmake --build build
 ./build/examples/avx/esimd_example_avx
 ./build/examples/avx2/esimd_example_avx2
 ./build/examples/avx512/esimd_example_avx512
+# the width-agnostic example, one binary per ISA (VSIZEX = 4 or 8):
+./build/examples/portable/esimd_example_portable_sse
+./build/examples/portable/esimd_example_portable_avx2
 ```
 
 Only the ISAs your CPU can actually execute are built (host detection at configure

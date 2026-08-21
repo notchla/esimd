@@ -78,6 +78,8 @@ benchmarks/               Google Benchmark perf suites (one exe per ISA)
 examples/                 runnable showcases, one subfolder per instruction set
   sse/ avx/ avx2/ avx512/ each: a demo .cpp + CMakeLists showing how to
                           include the library and build for that ISA
+  portable/               width-agnostic demo (vfloatx / VSIZEX): one source
+                          built for every ISA
 cmake/                    esimdISA.cmake helper module + find_package config
 ```
 
