@@ -25,7 +25,7 @@ option(ESIMD_BUILD_ALL_ISA "Build every ISA variant even if the host cannot run 
 # Per-ISA flag/define sets.
 # ----------------------------------------------------------------------------
 set(ESIMD_FLAGS_SSE42  -msse4.2 -D__SSE__ -D__SSE2__ -D__SSE4_1__ -D__SSE4_2__)
-set(ESIMD_FLAGS_AVX    -mavx -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__BMI__)
+set(ESIMD_FLAGS_AVX    -mavx -mbmi -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__BMI__)
 set(ESIMD_FLAGS_AVX2   -mavx2 -mfma -mf16c -mbmi -mbmi2 -mlzcnt
                        -D__AVX2__ -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__LZCNT__ -D__BMI__)
 set(ESIMD_FLAGS_AVX512 -march=skylake-avx512 -mavx2 -mfma -mf16c -mbmi -mbmi2 -mlzcnt

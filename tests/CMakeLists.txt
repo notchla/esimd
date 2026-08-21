@@ -9,3 +9,8 @@ esimd_add_isa_target(esimd_test_sse42 SSE42
   SOURCES test_sse.cpp
   LINKS   GTest::gtest_main
   LABELS  sse)
+
+esimd_add_isa_target(esimd_test_avx AVX
+  SOURCES test_avx.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx)
