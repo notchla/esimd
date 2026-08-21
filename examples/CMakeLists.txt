@@ -1,0 +1,11 @@
+# Copyright 2026 notchla liso.lorenzo@gmail.com
+# SPDX-License-Identifier: Apache-2.0
+#
+# One showcase executable per instruction set. Each lives in its own subfolder
+# and is compiled with that ISA's flags via esimd_add_isa_target (defined in the
+# top-level CMakeLists), so only the ISAs the host can execute are built.
+
+add_subdirectory(sse)
+add_subdirectory(avx)
+add_subdirectory(avx2)
+add_subdirectory(avx512)

@@ -19,6 +19,7 @@ target_compile_features(esimd INTERFACE cxx_std_17)
 
 option(ESIMD_BUILD_TESTS "Build correctness tests (GoogleTest)" ON)
 option(ESIMD_BUILD_BENCHMARKS "Build benchmarks (Google Benchmark)" ON)
+option(ESIMD_BUILD_EXAMPLES "Build the per-ISA showcase examples" ON)
 option(ESIMD_BUILD_ALL_ISA "Build every ISA variant even if the host cannot run it" OFF)
 
 # ----------------------------------------------------------------------------
@@ -98,4 +99,7 @@ if(ESIMD_BUILD_TESTS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.tx
 endif()
 if(ESIMD_BUILD_BENCHMARKS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/CMakeLists.txt")
   add_subdirectory(benchmarks)
+endif()
+if(ESIMD_BUILD_EXAMPLES AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples/CMakeLists.txt")
+  add_subdirectory(examples)
 endif()
