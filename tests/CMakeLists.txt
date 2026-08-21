@@ -24,3 +24,25 @@ esimd_add_isa_target(esimd_test_avx512 AVX512
   SOURCES test_avx512.cpp
   LINKS   GTest::gtest_main
   LABELS  avx512)
+
+# Integration test: <esimd/esimd.h> only, built once per ISA so the cross-width
+# helpers and default-width aliases are validated at each native width.
+esimd_add_isa_target(esimd_test_integration_sse42 SSE42
+  SOURCES test_esimd.cpp
+  LINKS   GTest::gtest_main
+  LABELS  sse integration)
+
+esimd_add_isa_target(esimd_test_integration_avx AVX
+  SOURCES test_esimd.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx integration)
+
+esimd_add_isa_target(esimd_test_integration_avx2 AVX2
+  SOURCES test_esimd.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx2 integration)
+
+esimd_add_isa_target(esimd_test_integration_avx512 AVX512
+  SOURCES test_esimd.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx512 integration)
