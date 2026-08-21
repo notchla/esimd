@@ -1,0 +1,11 @@
+@PACKAGE_INIT@
+
+# Imported target esimd::esimd (header-only INTERFACE library).
+include("${CMAKE_CURRENT_LIST_DIR}/esimdTargets.cmake")
+
+# Reusable per-ISA build helper: ESIMD_FLAGS_<ISA>, esimd_host_supports(),
+# esimd_add_isa_target(). Consumers may `include(esimdISA)` after find_package,
+# or use it directly since it is included here.
+include("${CMAKE_CURRENT_LIST_DIR}/esimdISA.cmake")
+
+check_required_components(esimd)
