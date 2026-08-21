@@ -38,7 +38,9 @@ set(ESIMD_FLAGS_AVX512 -march=skylake-avx512 -mavx2 -mfma -mf16c -mbmi -mbmi2 -m
 # ----------------------------------------------------------------------------
 include(CheckCXXSourceRuns)
 function(esimd_host_supports isa outvar)
-  set(CMAKE_REQUIRED_FLAGS ${ESIMD_FLAGS_${isa}})
+  # CMAKE_REQUIRED_FLAGS must be a single space-separated string, not a list,
+  # or check_cxx_source_runs mis-forwards the -D defines into try_run's cmake args.
+  string(REPLACE ";" " " CMAKE_REQUIRED_FLAGS "${ESIMD_FLAGS_${isa}}")
   # Probe a representative intrinsic per ISA.
   if(isa STREQUAL "SSE42")
     set(probe "#include <immintrin.h>\nint main(){__m128i a=_mm_set1_epi32(1);return _mm_extract_epi32(a,0)-1;}")
@@ -68,11 +70,11 @@ function(esimd_add_isa_target name isa)
   add_executable(${name} ${A_SOURCES})
   target_link_libraries(${name} PRIVATE esimd ${A_LINKS})
   target_compile_options(${name} PRIVATE ${ESIMD_FLAGS_${isa}} -Wall)
+  # Register a ctest entry only for labeled targets (tests). Benchmarks are left
+  # unlabeled so they build but are run manually rather than during `ctest`.
   if(host_ok AND A_LABELS)
     add_test(NAME ${name} COMMAND ${name})
     set_tests_properties(${name} PROPERTIES LABELS "${A_LABELS}")
-  elseif(host_ok AND NOT DEFINED A_LABELS)
-    add_test(NAME ${name} COMMAND ${name})
   endif()
 endfunction()
 
