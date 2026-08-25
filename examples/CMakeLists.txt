@@ -10,5 +10,9 @@ add_subdirectory(avx)
 add_subdirectory(avx2)
 add_subdirectory(avx512)
 
+# ARM backends (configured only when targeting AArch64).
+add_subdirectory(neon)
+add_subdirectory(neon2x)
+
 # Width-agnostic showcase (vfloatx / VSIZEX): the same source built for every ISA.
 add_subdirectory(portable)

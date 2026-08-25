@@ -209,7 +209,10 @@ TEST(vfloat8, rounding) {
   const vfloat8 v(1.4f, 1.6f, -1.4f, -1.6f, 2.5f, -2.5f, 0.4f, -0.6f);
   expect_eq(floor(v), {1.f, 1.f, -2.f, -2.f, 2.f, -3.f, 0.f, -1.f});
   expect_eq(ceil(v),  {2.f, 2.f, -1.f, -1.f, 3.f, -2.f, 1.f, 0.f});
+#if !defined(ESIMD_ARM64)
+  // NEON2X defines only floor/ceil for vfloat8; upstream has no trunc/round there.
   expect_eq(trunc(v), {1.f, 1.f, -1.f, -1.f, 2.f, -2.f, 0.f, 0.f});
+#endif
 }
 
 TEST(vfloat8, movement_and_reductions) {
@@ -242,6 +245,10 @@ TEST(vboold4, construct_logical_reduce) {
   EXPECT_TRUE (none(vboold4(esimd::False)));
 }
 
+// vdouble4 is gated on __X86_64__ in avx.h, so it does not exist under NEON2X.
+// (vboold4 above is unconditional and is exercised on ARM too.)
+#if !defined(ESIMD_ARM64)
+
 TEST(vdouble4, constructors_and_arithmetic) {
   expect_eq(vdouble4(2.5), {2.5, 2.5, 2.5, 2.5});
   expect_eq(vdouble4(1.0, 2.0, 3.0, 4.0), {1.0, 2.0, 3.0, 4.0});
@@ -271,3 +278,5 @@ TEST(vdouble4, fma_compare_select_reduce) {
   EXPECT_DOUBLE_EQ(reduce_max(v), 4.0);
   EXPECT_DOUBLE_EQ(toScalar(vdouble4(9.0, 0.0, 0.0, 0.0)), 9.0);
 }
+
+#endif // !ESIMD_ARM64

@@ -11,7 +11,7 @@
 
 namespace esimd 
 {
-#if defined(__SSE4_1__)
+#if defined(ESIMD_ARM64) || defined(__SSE4_1__)
   __forceinline __m128 blendv_ps(__m128 f, __m128 t, __m128 mask) {
     return _mm_blendv_ps(f,t,mask);
   }

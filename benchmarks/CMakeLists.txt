@@ -18,3 +18,11 @@ esimd_add_isa_target(esimd_bench_avx2 AVX2
 esimd_add_isa_target(esimd_bench_avx512 AVX512
   SOURCES bench_avx512.cpp
   LINKS   benchmark::benchmark)
+
+esimd_add_isa_target(esimd_bench_neon NEON
+  SOURCES bench_sse.cpp
+  LINKS   benchmark::benchmark)
+
+esimd_add_isa_target(esimd_bench_neon2x NEON2X
+  SOURCES bench_avx2.cpp
+  LINKS   benchmark::benchmark)

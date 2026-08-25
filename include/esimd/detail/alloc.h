@@ -12,7 +12,7 @@
 #pragma once
 
 #include "platform.h"
-#include <immintrin.h> // _mm_malloc / _mm_free
+#include "intrinsics.h" // _mm_malloc / _mm_free (sse2neon supplies both on ARM)
 
 namespace esimd
 {

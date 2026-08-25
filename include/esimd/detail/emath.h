@@ -7,7 +7,12 @@
 #include "intrinsics.h"
 #include "constants.h"
 #include <cmath>
+
+#if defined(__ARM_NEON) || defined(ESIMD_ARM64)
+#include "arm/emulation.h"
+#else
 #include <immintrin.h>
+#endif
 
 namespace esimd
 {
@@ -38,6 +43,15 @@ namespace esimd
 
   __forceinline float rcp  ( const float x )
   {
+#if defined(ESIMD_ARM64)
+    // Move scalar to vector register and do rcp.
+    __m128 a = vdupq_n_f32(x);
+    float32x4_t reciprocal = vrecpeq_f32(a);
+    reciprocal = vmulq_f32(vrecpsq_f32(a, reciprocal), reciprocal);
+    reciprocal = vmulq_f32(vrecpsq_f32(a, reciprocal), reciprocal);
+    return vgetq_lane_f32(reciprocal, 0);
+#else
+
     const __m128 a = _mm_set_ss(x);
 
 #if defined(__AVX512VL__)
@@ -51,19 +65,54 @@ namespace esimd
 #else
     return _mm_cvtss_f32(_mm_mul_ss(r,_mm_sub_ss(_mm_set_ss(2.0f), _mm_mul_ss(r, a))));
 #endif
+
+#endif  //defined(ESIMD_ARM64)
   }
 
   __forceinline float signmsk ( const float x ) {
+#if defined(ESIMD_ARM64)
+    // FP and Neon shares same vector register in arm64
+    __m128 a = vdupq_n_f32(x);
+    __m128i b = vdupq_n_s32(0x80000000);
+    a = _mm_and_ps(a, vreinterpretq_f32_s32(b));
+    return vgetq_lane_f32(a, 0);
+#else
     return _mm_cvtss_f32(_mm_and_ps(_mm_set_ss(x),_mm_castsi128_ps(_mm_set1_epi32(0x80000000))));
+#endif
   }
   __forceinline float xorf( const float x, const float y ) {
+#if defined(ESIMD_ARM64)
+    // FP and Neon shares same vector register in arm64
+    __m128 a = vdupq_n_f32(x);
+    __m128 b = vdupq_n_f32(y);
+    a = _mm_xor_ps(a, b);
+    return vgetq_lane_f32(a, 0);
+#else
     return _mm_cvtss_f32(_mm_xor_ps(_mm_set_ss(x),_mm_set_ss(y)));
+#endif
   }
   __forceinline float andf( const float x, const unsigned y ) {
+#if defined(ESIMD_ARM64)
+    // FP and Neon shares same vector register in arm64
+    __m128 a = vdupq_n_f32(x);
+    __m128i b = vdupq_n_u32(y);
+    a = _mm_and_ps(a, vreinterpretq_f32_s32(b));
+    return vgetq_lane_f32(a, 0);
+#else
     return _mm_cvtss_f32(_mm_and_ps(_mm_set_ss(x),_mm_castsi128_ps(_mm_set1_epi32(y))));
+#endif
   }
   __forceinline float rsqrt( const float x )
   {
+#if defined(ESIMD_ARM64)
+    // FP and Neon shares same vector register in arm64
+    __m128 a = vdupq_n_f32(x);
+    __m128 value = _mm_rsqrt_ps(a);
+    value = vmulq_f32(value, vrsqrtsq_f32(vmulq_f32(a, value), value));
+    value = vmulq_f32(value, vrsqrtsq_f32(vmulq_f32(a, value), value));
+    return vgetq_lane_f32(value, 0);
+#else
+
     const __m128 a = _mm_set_ss(x);
 #if defined(__AVX512VL__)
     __m128 r = _mm_rsqrt14_ss(_mm_set_ss(0.0f),a);
@@ -73,6 +122,7 @@ namespace esimd
     const __m128 c = _mm_add_ss(_mm_mul_ss(_mm_set_ss(1.5f), r),
                                 _mm_mul_ss(_mm_mul_ss(_mm_mul_ss(a, _mm_set_ss(-0.5f)), r), _mm_mul_ss(r, r)));
     return _mm_cvtss_f32(c);
+#endif
   }
 
   __forceinline float nextafter(float x, float y) { return ::nextafterf(x, y); }
@@ -123,7 +173,22 @@ namespace esimd
   __forceinline double floor( const double x ) { return ::floor (x); }
   __forceinline double ceil ( const double x ) { return ::ceil (x); }
 
-#if defined(__SSE4_1__)
+#if defined(ESIMD_ARM64)
+  __forceinline float mini(float a, float b) {
+    // FP and Neon shares same vector register in arm64
+    __m128 x = vdupq_n_f32(a);
+    __m128 y = vdupq_n_f32(b);
+    x = _mm_min_ps(x, y);
+    return vgetq_lane_f32(x, 0);
+  }
+  __forceinline float maxi(float a, float b) {
+    // FP and Neon shares same vector register in arm64
+    __m128 x = vdupq_n_f32(a);
+    __m128 y = vdupq_n_f32(b);
+    x = _mm_max_ps(x, y);
+    return vgetq_lane_f32(x, 0);
+  }
+#elif defined(__SSE4_1__)
   __forceinline float mini(float a, float b) {
     const __m128i ai = _mm_castps_si128(_mm_set_ss(a));
     const __m128i bi = _mm_castps_si128(_mm_set_ss(b));
@@ -293,7 +358,7 @@ namespace esimd
     return x | (y << 1) | (z << 2);
   }
 
-#if defined(__AVX2__)
+#if defined(__AVX2__) && !defined(ESIMD_ARM64)
 
   template<>
     __forceinline unsigned int bitInterleave(const unsigned int &xi, const unsigned int& yi, const unsigned int& zi)

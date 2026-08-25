@@ -46,3 +46,31 @@ esimd_add_isa_target(esimd_test_integration_avx512 AVX512
   SOURCES test_esimd.cpp
   LINKS   GTest::gtest_main
   LABELS  avx512 integration)
+
+# ARM: the same assertions, compiled against the NEON backends. NEON is 4-wide
+# (so it runs the SSE suite) and NEON2X is double-pumped 8-wide (so it runs the
+# AVX2 suite). Skipped automatically when the target is not AArch64.
+esimd_add_isa_target(esimd_test_neon NEON
+  SOURCES test_sse.cpp
+  LINKS   GTest::gtest_main
+  LABELS  neon)
+
+esimd_add_isa_target(esimd_test_neon2x_avx NEON2X
+  SOURCES test_avx.cpp
+  LINKS   GTest::gtest_main
+  LABELS  neon2x)
+
+esimd_add_isa_target(esimd_test_neon2x NEON2X
+  SOURCES test_avx2.cpp
+  LINKS   GTest::gtest_main
+  LABELS  neon2x)
+
+esimd_add_isa_target(esimd_test_integration_neon NEON
+  SOURCES test_esimd.cpp
+  LINKS   GTest::gtest_main
+  LABELS  neon integration)
+
+esimd_add_isa_target(esimd_test_integration_neon2x NEON2X
+  SOURCES test_esimd.cpp
+  LINKS   GTest::gtest_main
+  LABELS  neon2x integration)

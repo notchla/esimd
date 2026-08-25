@@ -19,7 +19,12 @@
 #define __X86_ASM__
 #endif
 
-#if defined(__X86_64__)
+/* detect 64 bit ARM platform */
+#if defined(__aarch64__) || defined(_M_ARM64)
+#define ESIMD_ARM64
+#endif
+
+#if defined(__X86_64__) || defined(ESIMD_ARM64)
 #define __64BIT__
 #endif
 

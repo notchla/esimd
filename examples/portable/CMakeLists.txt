@@ -10,3 +10,5 @@ esimd_add_isa_target(esimd_example_portable_sse    SSE42  SOURCES portable_examp
 esimd_add_isa_target(esimd_example_portable_avx    AVX    SOURCES portable_example.cpp)
 esimd_add_isa_target(esimd_example_portable_avx2   AVX2   SOURCES portable_example.cpp)
 esimd_add_isa_target(esimd_example_portable_avx512 AVX512 SOURCES portable_example.cpp)
+esimd_add_isa_target(esimd_example_portable_neon   NEON   SOURCES portable_example.cpp)
+esimd_add_isa_target(esimd_example_portable_neon2x NEON2X SOURCES portable_example.cpp)

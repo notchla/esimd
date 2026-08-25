@@ -43,8 +43,11 @@ TEST(vint8_avx2, compare_min_max_select_reduce) {
 
 TEST(vint8_avx2, permute_and_shuffle) {
   const vint8 v(10, 11, 12, 13, 14, 15, 16, 17);
+#if !defined(ESIMD_ARM64)
+  // permute() is x86-only: upstream provides no NEON2X cross-lane permute.
   const __m256i rev = _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0);
   expect_eq(permute(v, rev), {17, 16, 15, 14, 13, 12, 11, 10}); // cross-lane permute
+#endif
   expect_eq(shuffle<1, 0, 3, 2>(v), {11, 10, 13, 12, 15, 14, 17, 16}); // per-128-lane
   expect_eq(unpacklo(vint8(0, 1, 2, 3, 4, 5, 6, 7), vint8(10, 11, 12, 13, 14, 15, 16, 17)),
             {0, 10, 1, 11, 4, 14, 5, 15});
@@ -77,8 +80,11 @@ TEST(vuint8_avx2, compare_minmax_select_reduce) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// vllong4 (256-bit, 4-wide signed 64-bit)
+// vllong4 (256-bit, 4-wide signed 64-bit). x86-64 only: avx.h gates
+// vllong4_avx2.h on __X86_64__, so the type does not exist under NEON2X.
 ////////////////////////////////////////////////////////////////////////////////
+
+#if !defined(ESIMD_ARM64)
 
 TEST(vllong4, constructors_and_load_store) {
   expect_eq(vllong4(7ll), {7ll, 7ll, 7ll, 7ll});
@@ -119,3 +125,5 @@ TEST(vllong4, compare_select_reduce) {
   EXPECT_EQ(reduce_add(v), 10ll);
   EXPECT_EQ(toScalar(vllong4(42ll, 0ll, 0ll, 0ll)), 42ll);
 }
+
+#endif // !ESIMD_ARM64

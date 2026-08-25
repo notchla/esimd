@@ -45,9 +45,12 @@ int main() {
   std::cout << "reduce_add(a) = " << reduce_add(a)
             << ", reduce_max(a) = " << reduce_max(a) << "\n";
 
+#if !defined(ESIMD_ARM64)
   // Cross-lane permute: reverse the 8 lanes. index[i] picks source lane index[i].
+  // x86-only -- upstream provides no NEON2X equivalent.
   const __m256i reverse = _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0);
   print("permute(a, reverse)", permute(a, reverse), 8);
+#endif
 
   // Unsigned native min/max.
   const vuint8 u(10u, 40u, 20u, 30u, 60u, 50u, 80u, 70u);
@@ -55,6 +58,8 @@ int main() {
   print("min(u, 45)", min(u, vuint8(45u)), 8);
 
   // 64-bit integer lanes (only present under AVX2 / __X86_64__).
+#if !defined(ESIMD_ARM64)
+  // vllong4 is gated on __X86_64__ in avx.h, so it does not exist under NEON2X.
   const vllong4 L(1000000000ll, 2000000000ll, 3ll, 4ll);
   const vllong4 M(3ll, 3ll, 3ll, 3ll);
   print("L", L, 4);
@@ -62,6 +67,7 @@ int main() {
   std::cout << "reduce_add(L) = " << reduce_add(L) << "\n";
   std::cout << "movemask(L < 5) = 0x" << std::hex
             << movemask(L < vllong4(5ll)) << std::dec << "\n";
+#endif
 
   return 0;
 }

@@ -18,12 +18,15 @@ static std::vector<vint8> make_int_data(size_t n) {
   return v;
 }
 
+// vllong4 is gated on __X86_64__ in avx.h, so it does not exist under NEON2X.
+#if !defined(ESIMD_ARM64)
 static std::vector<vllong4> make_llong_data(size_t n) {
   std::vector<vllong4> v(n);
   for (size_t i = 0; i < n; ++i)
     v[i] = vllong4((long long)i, (long long)(i + 1), (long long)(i + 2), (long long)(i + 3));
   return v;
 }
+#endif
 
 static void BM_vint8_mul(benchmark::State& state) {
   auto data = make_int_data(1024);
@@ -57,6 +60,7 @@ static void BM_vint8_reduce_add(benchmark::State& state) {
 }
 BENCHMARK(BM_vint8_reduce_add);
 
+#if !defined(ESIMD_ARM64)
 static void BM_vllong4_add(benchmark::State& state) {
   auto data = make_llong_data(1024);
   for (auto _ : state) {
@@ -66,5 +70,6 @@ static void BM_vllong4_add(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_vllong4_add);
+#endif
 
 BENCHMARK_MAIN();
