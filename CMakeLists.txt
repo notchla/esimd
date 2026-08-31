@@ -24,6 +24,17 @@ option(ESIMD_BUILD_BENCHMARKS "Build benchmarks (Google Benchmark)" ON)
 option(ESIMD_BUILD_EXAMPLES "Build the per-ISA showcase examples" ON)
 option(ESIMD_BUILD_ALL_ISA "Build every ISA variant even if the host cannot run it" OFF)
 option(ESIMD_INSTALL "Generate install/export rules for esimd" ON)
+option(ESIMD_ENABLE_TRIG "Enable the SLEEF-backed trigonometry layer (<esimd/trig.h>)" ON)
+
+# Negative define, so the enabled default also holds for consumers who put
+# include/ on their path without CMake. On the interface target, so
+# find_package(esimd) consumers inherit this build's choice. Note that TUs
+# including <esimd/trig.h> must also be compiled with -ffp-contract=off (see the
+# README); that is left to the consumer rather than forced onto the interface
+# target, which would disable FMA contraction in every TU linking esimd::esimd.
+if(NOT ESIMD_ENABLE_TRIG)
+  target_compile_definitions(esimd INTERFACE ESIMD_DISABLE_TRIG)
+endif()
 
 # ----------------------------------------------------------------------------
 # Per-ISA flag sets + esimd_host_supports() + esimd_add_isa_target(). Kept in a
@@ -68,7 +79,12 @@ if(ESIMD_INSTALL)
   set(ESIMD_CMAKE_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/esimd")
 
   # Headers (the whole header-only library).
-  install(DIRECTORY include/esimd DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  if(ESIMD_ENABLE_TRIG)
+    install(DIRECTORY include/esimd DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  else()
+    install(DIRECTORY include/esimd DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+            PATTERN "detail/sleef" EXCLUDE)
+  endif()
 
   # The interface target -> esimdTargets.cmake (namespaced esimd::).
   install(TARGETS esimd EXPORT esimdTargets)

@@ -10,7 +10,9 @@ one API, with scalar fallbacks and width-generic aliases (`vfloat4/8/16`, `vfloa
 Original code © Intel Corporation, licensed Apache-2.0 (see `LICENSE`). This is an
 extraction/repackaging into a standalone header-only library. The vendored
 `include/esimd/detail/arm/sse2neon.h` is © SSE2NEON Contributors and licensed MIT
-(see the header's own license block).
+(see the header's own license block). The vendored `include/esimd/detail/sleef/`
+headers are © Naoki Shibata and contributors, licensed under the Boost Software
+License 1.0, and are used only by the optional `<esimd/trig.h>` layer.
 
 > **Scope:** x86 and AArch64. The WebAssembly backend from upstream is excluded.
 
@@ -61,7 +63,108 @@ vfloat4 c = a + b;        // {5,5,5,5}
 
 Because the headers dispatch on the compiler's predefined ISA macros, compile your
 translation unit with matching flags (the `-m` codegen flag and the matching `-D`
-define must agree).
+define must agree). Translation units that include `<esimd/trig.h>` additionally need
+`-ffp-contract=off` — see [Trigonometry](#trigonometry-optional).
+
+## Trigonometry (optional)
+
+`<esimd/trig.h>` adds SLEEF-backed trigonometry to the existing vector types. It is
+enabled by default (`ESIMD_ENABLE_TRIG`) but never implicit: `<esimd/esimd.h>` does
+not pull it in.
+
+```cpp
+#include <esimd/trig.h>
+using namespace esimd;
+
+vfloat8 x(0.5f);
+vfloat8 s = sin(x);              // <=1   ULP  (SLEEF u10)
+vfloat8 f = sin_u35(x);          // <=3.5 ULP, faster
+vfloat8 q = fast_sin(x);         // <=3500 ULP, float only, |x| < 125000
+
+vfloat8 sn, cs; sincos(x, sn, cs);   // one shared range reduction
+```
+
+`sin cos tan sincos asin acos atan atan2`, each in three flavours: the plain name
+(SLEEF `u10`), a `_u35` suffix (SLEEF `u35`), and `fast_sin` / `fast_cos` (SLEEF
+`u3500`, single precision only — SLEEF has no `fasttan` and no double `u3500`).
+Overloads exist for every `vfloat`/`vdouble` width the active ISA defines.
+
+> **Every translation unit including `<esimd/trig.h>` must be compiled with
+> `-ffp-contract=off`.** SLEEF's double-double sequences reconstruct the rounding
+> error of an unfused `a*b`, which a contracted FMA discards; without the flag the ULP
+> bounds do not hold. The headers ask for it with `#pragma STDC FP_CONTRACT OFF`, which
+> Clang honours and GCC ignores. esimd does not add it to `esimd::esimd`, since that
+> would disable contraction in every TU linking the target, trig or not:
+>
+> ```cmake
+> target_link_libraries(app PRIVATE esimd::esimd)
+> target_compile_options(app PRIVATE -ffp-contract=off)
+> ```
+
+## Trigonometry backends
+
+Each width dispatches to the SLEEF implementation built for that same instruction set
+— no cross-ISA emulation. SLEEF only generates inline headers for FMA-capable targets,
+so SSE4.2 and plain AVX fall back to a per-lane libm loop.
+
+| ISA      | vfloat4    | vfloat8              | vfloat16   | vdouble4 | vdouble8   |
+|----------|------------|----------------------|------------|----------|------------|
+| `SSE42`  | *scalar*   | —                    | —          | —        | —          |
+| `AVX`    | *scalar*   | *scalar*             | —          | *scalar* | —          |
+| `AVX2`   | `avx2128`  | `avx2`               | —          | `avx2`   | —          |
+| `AVX512` | `avx2128`  | `avx2`               | `avx512f`  | `avx2`   | `avx512f`  |
+| `NEON`   | `advsimd`  | —                    | —          | —        | —          |
+| `NEON2X` | `advsimd`  | `advsimd` ×2 (lo/hi) | —          | —        | —          |
+
+`—` means the ISA has no such type at all, not that the function is missing.
+
+### The SSE4.2 / AVX scalar fallback
+
+`<esimd/trig.h>` defines `ESIMD_TRIG_SCALAR_FALLBACK` when this path is active. It is
+**not vectorised** — one libm call per lane, several times slower than the SLEEF path
+— and all three accuracy flavours collapse to the same call, so `sin_u35` and
+`fast_sin` buy nothing there. Accuracy is your libm's rather than SLEEF's; glibc stays
+inside the `u10` bound, and the test suite holds the fallback to it.
+
+### Switching it off
+
+`-DESIMD_ENABLE_TRIG=OFF` makes `<esimd/trig.h>` inert (it still compiles, but declares
+nothing and leaves `ESIMD_HAS_TRIG` undefined), skips the `esimd_test_trig_*` targets,
+and drops the vendored SLEEF headers from the install. It travels on the
+`esimd::esimd` interface target as `ESIMD_DISABLE_TRIG`, so `find_package(esimd)`
+consumers inherit the choice; the define is negative, so putting `include/` on your
+path without CMake still gets the enabled default.
+
+`ESIMD_HAS_TRIG` says the API is present. It is defined on every ISA unless the layer
+is switched off, so guard on it only to stay compatible with an `OFF` build:
+
+```cpp
+#include <esimd/trig.h>
+#ifdef ESIMD_HAS_TRIG
+  vfloatx s = sin(v);
+#endif
+```
+
+### Regenerating the SLEEF headers
+
+The vendored headers in `include/esimd/detail/sleef/` are generated artifacts, checked
+in so consumers need no SLEEF build. They are self-contained: nothing links `libsleef`.
+To refresh them from a SLEEF checkout:
+
+```sh
+# x86 -> sleefinline_avx2128.h, sleefinline_avx2.h, sleefinline_avx512f.h
+cmake -B build -S . -DSLEEF_BUILD_INLINE_HEADERS=ON -DCMAKE_INSTALL_PREFIX=$PWD/install
+cmake --build build
+
+# aarch64 -> sleefinline_advsimd.h (reuses the native build for the host tools)
+cmake -B build-arm64 -S . -DSLEEF_BUILD_INLINE_HEADERS=ON \
+      -DCMAKE_INSTALL_PREFIX=$PWD/install-arm64 -DNATIVE_BUILD_DIR=$PWD/build \
+      -DCMAKE_TOOLCHAIN_FILE=<esimd>/cmake/toolchain-aarch64-linux-gnu.cmake
+cmake --build build-arm64
+```
+
+Copy the resulting `build*/include/sleefinline_*.h` into
+`include/esimd/detail/sleef/`.
 
 ## Using esimd from your own CMake project
 
@@ -88,6 +191,10 @@ esimd_add_isa_target(app_sse    SSE42  SOURCES main.cpp)
 esimd_add_isa_target(app_avx512 AVX512 SOURCES main.cpp)
 ```
 
+Build options: `ESIMD_BUILD_TESTS`, `ESIMD_BUILD_BENCHMARKS`, `ESIMD_BUILD_EXAMPLES`,
+`ESIMD_INSTALL` and `ESIMD_ENABLE_TRIG` default to `ON`; `ESIMD_BUILD_ALL_ISA`
+defaults to `OFF`.
+
 `esimd_add_isa_target(name <ISA> SOURCES ... [LINKS ...] [LABELS ...])` compiles the
 sources with `ESIMD_FLAGS_<ISA>`, links `esimd::esimd`, and — unless
 `ESIMD_BUILD_ALL_ISA=ON` — only builds the ISAs the configure host can actually
@@ -100,6 +207,7 @@ list both the x86 and the ARM variants. Pass `LABELS` to also register a `ctest`
 ```
 include/esimd/            public headers
   esimd.h                 master include (ISA dispatch + cross-width helpers)
+  trig.h                  optional SLEEF-backed trigonometry (opt-in include)
   varying.h               scalar fallback types, vtypes<N>, width aliases
   sse.h avx.h avx512.h    per-ISA entry points
   v*4_sse2.h              SSE / 128-bit 4-wide types
@@ -109,6 +217,8 @@ include/esimd/            public headers
                           header-only alloc, simd_wrapper_types)
     arm/                  vendored NEON emulation: sse2neon.h (MIT), avx2neon.h,
                           emulation.h — pulled in automatically on AArch64
+    sleef/                vendored SLEEF 4.0.0 inline headers (BSL-1.0), one per
+                          ISA — used only by trig.h
 extern/                   googletest, benchmark (git submodules)
 tests/                    GoogleTest correctness suites (one exe per ISA)
 benchmarks/               Google Benchmark perf suites (one exe per ISA)
@@ -135,7 +245,9 @@ ctest --test-dir build --output-on-failure
 ```
 
 Test/benchmark executables are compiled **once per ISA** (`esimd_test_sse42`,
-`esimd_test_avx`, `esimd_test_avx2`, `esimd_test_avx512`, and matching `esimd_bench_*`).
+`esimd_test_avx`, `esimd_test_avx2`, `esimd_test_avx512`, and matching `esimd_bench_*`),
+plus `esimd_test_trig_*` for every ISA — the SLEEF backends and the scalar fallback
+are held to the same ULP bounds (`ctest -L trig` runs just those).
 By default only the ISA variants the build host can *execute* are built and run
 (detected at configure time), so an AVX512 binary never faults on an older CPU. Pass
 `-DESIMD_BUILD_ALL_ISA=ON` to force-build every variant for compile-only inspection.
