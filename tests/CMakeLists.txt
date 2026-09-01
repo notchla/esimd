@@ -119,3 +119,35 @@ if(ESIMD_ENABLE_TRIG)
     endif()
   endforeach()
 endif()
+
+# Optional data-types layer (<esimd/types.h>), on every ISA: Vec2<T> is checked
+# at T = scalar and at every vector width the backend defines, plus Vec2fa.
+esimd_add_isa_target(esimd_test_vec2_sse42 SSE42
+  SOURCES test_vec2.cpp
+  LINKS   GTest::gtest_main
+  LABELS  sse vec2)
+
+esimd_add_isa_target(esimd_test_vec2_avx AVX
+  SOURCES test_vec2.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx vec2)
+
+esimd_add_isa_target(esimd_test_vec2_avx2 AVX2
+  SOURCES test_vec2.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx2 vec2)
+
+esimd_add_isa_target(esimd_test_vec2_avx512 AVX512
+  SOURCES test_vec2.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx512 vec2)
+
+esimd_add_isa_target(esimd_test_vec2_neon NEON
+  SOURCES test_vec2.cpp
+  LINKS   GTest::gtest_main
+  LABELS  neon vec2)
+
+esimd_add_isa_target(esimd_test_vec2_neon2x NEON2X
+  SOURCES test_vec2.cpp
+  LINKS   GTest::gtest_main
+  LABELS  neon2x vec2)

@@ -166,6 +166,41 @@ cmake --build build-arm64
 Copy the resulting `build*/include/sleefinline_*.h` into
 `include/esimd/detail/sleef/`.
 
+## Data types
+
+`<esimd/types.h>` adds the geometric types embree builds on top of the simd
+registers. It is opt-in by include — `<esimd/esimd.h>` does not pull it in — and, unlike
+`<esimd/trig.h>`, needs no CMake option, no vendored third-party headers and no
+special compile flags. Just include it.
+
+```cpp
+#include <esimd/types.h>
+using namespace esimd;
+
+Vec2f  p(3.0f, 4.0f);
+float  d = length(p);          // 5.0f
+
+Vec2<vfloat8> q(vfloat8(3.0f), vfloat8(4.0f));
+vfloat8 l = length(q);         // 8 lanes at once -- same code, T = vfloat8
+
+Vec2fa a(1.0f, 2.0f);          // SSE-backed, x/y in one __m128
+```
+
+So far the layer provides:
+
+| type | what it is |
+|------|------------|
+| `Vec2<T>` | generic 2D vector. `T` is any scalar (`Vec2b`/`Vec2i`/`Vec2f`) or any esimd vector type (`Vec2<vfloat4>`, `Vec2<vfloat8>`, `Vec2<vfloat16>`, …) |
+| `Vec2fa` | 2 floats held in a `__m128`, 16-byte aligned (`Vec2fa_t` is an alias) |
+
+`Vec2<T>` is component-wise plumbing over `T`, so every operation it offers is one
+`T` already has: arithmetic, `min`/`max`, the `madd`/`msub`/`nmadd`/`nmsub` family,
+reductions, `dot`/`cross`/`length`/`normalize`/`normalize_safe`/`distance`/`det`,
+`select` (on a `bool`, a `Vec2<bool>`, or a `T::Bool` mask), `lerp`, `maxDim` and
+`shift_right_1`. Some operation are defined only for some vector width: `frac` exists for `Vec2<vfloat4>`/`Vec2<vfloat8>` but not `Vec2<vfloat16>`,
+and `maxDim` — which branches on a scalar comparison — is meaningful only for a
+scalar `T`.
+
 ## Using esimd from your own CMake project
 
 esimd exports an interface target `esimd::esimd` (just the include path) and ships a
@@ -208,6 +243,7 @@ list both the x86 and the ARM variants. Pass `LABELS` to also register a `ctest`
 include/esimd/            public headers
   esimd.h                 master include (ISA dispatch + cross-width helpers)
   trig.h                  optional SLEEF-backed trigonometry (opt-in include)
+  types.h                 data types
   varying.h               scalar fallback types, vtypes<N>, width aliases
   sse.h avx.h avx512.h    per-ISA entry points
   v*4_sse2.h              SSE / 128-bit 4-wide types
@@ -219,6 +255,8 @@ include/esimd/            public headers
                           emulation.h — pulled in automatically on AArch64
     sleef/                vendored SLEEF 4.0.0 inline headers (BSL-1.0), one per
                           ISA — used only by trig.h
+  types/                  the optional data types themselves: vec2.h (Vec2<T>)
+                          and vec2fa.h (Vec2fa) — reached via types.h
 extern/                   googletest, benchmark (git submodules)
 tests/                    GoogleTest correctness suites (one exe per ISA)
 benchmarks/               Google Benchmark perf suites (one exe per ISA)
@@ -247,7 +285,9 @@ ctest --test-dir build --output-on-failure
 Test/benchmark executables are compiled **once per ISA** (`esimd_test_sse42`,
 `esimd_test_avx`, `esimd_test_avx2`, `esimd_test_avx512`, and matching `esimd_bench_*`),
 plus `esimd_test_trig_*` for every ISA — the SLEEF backends and the scalar fallback
-are held to the same ULP bounds (`ctest -L trig` runs just those).
+are held to the same ULP bounds (`ctest -L trig` runs just those) — and
+`esimd_test_vec2_*`, which checks `Vec2<T>` at `T` = scalar and at every vector width
+the backend defines, plus `Vec2fa` (`ctest -L vec2`).
 By default only the ISA variants the build host can *execute* are built and run
 (detected at configure time), so an AVX512 binary never faults on an older CPU. Pass
 `-DESIMD_BUILD_ALL_ISA=ON` to force-build every variant for compile-only inspection.
