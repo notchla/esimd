@@ -183,3 +183,34 @@ esimd_add_isa_target(esimd_test_vec3_neon2x NEON2X
   SOURCES test_vec3.cpp
   LINKS   GTest::gtest_main
   LABELS  neon2x vec3)
+
+# Same, for Vec4<T>
+esimd_add_isa_target(esimd_test_vec4_sse42 SSE42
+  SOURCES test_vec4.cpp
+  LINKS   GTest::gtest_main
+  LABELS  sse vec4)
+
+esimd_add_isa_target(esimd_test_vec4_avx AVX
+  SOURCES test_vec4.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx vec4)
+
+esimd_add_isa_target(esimd_test_vec4_avx2 AVX2
+  SOURCES test_vec4.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx2 vec4)
+
+esimd_add_isa_target(esimd_test_vec4_avx512 AVX512
+  SOURCES test_vec4.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx512 vec4)
+
+esimd_add_isa_target(esimd_test_vec4_neon NEON
+  SOURCES test_vec4.cpp
+  LINKS   GTest::gtest_main
+  LABELS  neon vec4)
+
+esimd_add_isa_target(esimd_test_vec4_neon2x NEON2X
+  SOURCES test_vec4.cpp
+  LINKS   GTest::gtest_main
+  LABELS  neon2x vec4)

@@ -187,6 +187,9 @@ Vec2fa a(1.0f, 2.0f);          // SSE-backed, x/y in one __m128
 
 Vec3f  n = normalize(cross(Vec3f(1,0,0), Vec3f(0,1,0)));   // (0,0,1)
 Vec3fa b(1.0f, 2.0f, 3.0f);    // SSE-backed, x/y/z in one __m128
+
+Vec4f  h(n, 1.0f);             // homogeneous: a Vec3 plus w
+Vec3f  back = h.xyz();
 ```
 
 So far the layer provides:
@@ -200,6 +203,7 @@ So far the layer provides:
 | `Vec3fx` | `Vec3fa` with lane 3 exposed as `w`/`a`/`u` — a float, int or unsigned payload riding along (`Vec3ff` is an alias) |
 | `Vec3ia` | 3 ints in a `__m128i`, 16-byte aligned |
 | `Vec3ba` | the 3-lane mask `Vec3ia`/`Vec3fa` comparisons return |
+| `Vec4<T>` | generic 4D vector (`Vec4b`/`Vec4uc`/`Vec4i`/`Vec4f`, `Vec4<vfloat4>`, …) |
 
 `Vec2<T>` is component-wise plumbing over `T`, so every operation it offers is one
 `T` already has: arithmetic, `min`/`max`, the `madd`/`msub`/`nmadd`/`nmsub` family,
@@ -218,6 +222,12 @@ scalar-`T` only.
 `Vec3fa` keeps three floats in one `__m128` and masks the padding lane where it
 matters (`load`, `==`/`!=`, `dot`, the reductions); it converts explicitly to
 `vfloat4`, `vint4`, `Vec2fa` and `Vec3ia`.
+
+`Vec4<T>` arithmetic, `min`/`max`, the `madd` family,
+reductions, `dot`/`length`/`normalize`/`distance`, `select`, `lerp` and
+`shift_right_1` — no cross product and no SSE companion. It converts both ways with
+`Vec3<T>`: `Vec4<T>(xyz, w)` and `Vec3fx` going in, `xyz()` or an implicit conversion
+coming out.
 
 Two things to watch: `trunc` rounds toward zero on AArch64 but to nearest on x86
 (`floor`/`ceil` agree everywhere), and `sqr(Vec3<T>)` is `dot(a,a)` while
@@ -282,6 +292,7 @@ include/esimd/            public headers
                           vec2.h (Vec2<T>) / vec2fa.h (Vec2fa)
                           vec3.h (Vec3<T>) / vec3fa.h (Vec3fa, Vec3fx)
                                            / vec3ia.h (Vec3ia) / vec3ba.h (Vec3ba)
+                          vec4.h (Vec4<T>)
 extern/                   googletest, benchmark (git submodules)
 tests/                    GoogleTest correctness suites (one exe per ISA)
 benchmarks/               Google Benchmark perf suites (one exe per ISA)
@@ -311,9 +322,10 @@ Test/benchmark executables are compiled **once per ISA** (`esimd_test_sse42`,
 `esimd_test_avx`, `esimd_test_avx2`, `esimd_test_avx512`, and matching `esimd_bench_*`),
 plus `esimd_test_trig_*` for every ISA — the SLEEF backends and the scalar fallback
 are held to the same ULP bounds (`ctest -L trig` runs just those) — and
-`esimd_test_vec2_*` and `esimd_test_vec3_*`, which check `Vec2<T>`/`Vec3<T>` at
-`T` = scalar and at every vector width the backend defines, plus the SSE companions
-`Vec2fa`, `Vec3fa`/`Vec3fx`, `Vec3ia` and `Vec3ba` (`ctest -L vec2`, `ctest -L vec3`).
+`esimd_test_vec2_*`, `esimd_test_vec3_*` and `esimd_test_vec4_*`, which check
+`Vec2<T>`/`Vec3<T>`/`Vec4<T>` at `T` = scalar and at every vector width the backend
+defines, plus the SSE companions `Vec2fa`, `Vec3fa`/`Vec3fx`, `Vec3ia` and `Vec3ba`
+(`ctest -L vec2`, `-L vec3`, `-L vec4`).
 By default only the ISA variants the build host can *execute* are built and run
 (detected at configure time), so an AVX512 binary never faults on an older CPU. Pass
 `-DESIMD_BUILD_ALL_ISA=ON` to force-build every variant for compile-only inspection.
