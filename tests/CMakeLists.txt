@@ -151,3 +151,35 @@ esimd_add_isa_target(esimd_test_vec2_neon2x NEON2X
   SOURCES test_vec2.cpp
   LINKS   GTest::gtest_main
   LABELS  neon2x vec2)
+
+# Same, for Vec3<T> and the three SSE companions vec3.h brings with it
+# (Vec3ba / Vec3ia / Vec3fa+Vec3fx).
+esimd_add_isa_target(esimd_test_vec3_sse42 SSE42
+  SOURCES test_vec3.cpp
+  LINKS   GTest::gtest_main
+  LABELS  sse vec3)
+
+esimd_add_isa_target(esimd_test_vec3_avx AVX
+  SOURCES test_vec3.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx vec3)
+
+esimd_add_isa_target(esimd_test_vec3_avx2 AVX2
+  SOURCES test_vec3.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx2 vec3)
+
+esimd_add_isa_target(esimd_test_vec3_avx512 AVX512
+  SOURCES test_vec3.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx512 vec3)
+
+esimd_add_isa_target(esimd_test_vec3_neon NEON
+  SOURCES test_vec3.cpp
+  LINKS   GTest::gtest_main
+  LABELS  neon vec3)
+
+esimd_add_isa_target(esimd_test_vec3_neon2x NEON2X
+  SOURCES test_vec3.cpp
+  LINKS   GTest::gtest_main
+  LABELS  neon2x vec3)
