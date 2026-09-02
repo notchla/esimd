@@ -6,3 +6,6 @@
 #include "types/vec2.h"
 #include "types/vec3.h"
 #include "types/vec4.h"
+#include "types/quaternion.h"
+#include "types/linearspace2.h"
+#include "types/linearspace3.h"

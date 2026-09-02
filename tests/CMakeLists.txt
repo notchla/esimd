@@ -214,3 +214,66 @@ esimd_add_isa_target(esimd_test_vec4_neon2x NEON2X
   SOURCES test_vec4.cpp
   LINKS   GTest::gtest_main
   LABELS  neon2x vec4)
+
+# LinearSpace2<T> / LinearSpace3<T>, the 2x2 and 3x3 matrices built on Vec2/Vec3.
+esimd_add_isa_target(esimd_test_linearspace_sse42 SSE42
+  SOURCES test_linearspace.cpp
+  LINKS   GTest::gtest_main
+  LABELS  sse linearspace)
+
+esimd_add_isa_target(esimd_test_linearspace_avx AVX
+  SOURCES test_linearspace.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx linearspace)
+
+esimd_add_isa_target(esimd_test_linearspace_avx2 AVX2
+  SOURCES test_linearspace.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx2 linearspace)
+
+esimd_add_isa_target(esimd_test_linearspace_avx512 AVX512
+  SOURCES test_linearspace.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx512 linearspace)
+
+esimd_add_isa_target(esimd_test_linearspace_neon NEON
+  SOURCES test_linearspace.cpp
+  LINKS   GTest::gtest_main
+  LABELS  neon linearspace)
+
+esimd_add_isa_target(esimd_test_linearspace_neon2x NEON2X
+  SOURCES test_linearspace.cpp
+  LINKS   GTest::gtest_main
+  LABELS  neon2x linearspace)
+
+# QuaternionT<T> and the fastapprox transcendentals, pulled in as LinearSpace3's
+# construction-from-quaternion dependency.
+esimd_add_isa_target(esimd_test_quaternion_sse42 SSE42
+  SOURCES test_quaternion.cpp
+  LINKS   GTest::gtest_main
+  LABELS  sse quaternion)
+
+esimd_add_isa_target(esimd_test_quaternion_avx AVX
+  SOURCES test_quaternion.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx quaternion)
+
+esimd_add_isa_target(esimd_test_quaternion_avx2 AVX2
+  SOURCES test_quaternion.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx2 quaternion)
+
+esimd_add_isa_target(esimd_test_quaternion_avx512 AVX512
+  SOURCES test_quaternion.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx512 quaternion)
+
+esimd_add_isa_target(esimd_test_quaternion_neon NEON
+  SOURCES test_quaternion.cpp
+  LINKS   GTest::gtest_main
+  LABELS  neon quaternion)
+
+esimd_add_isa_target(esimd_test_quaternion_neon2x NEON2X
+  SOURCES test_quaternion.cpp
+  LINKS   GTest::gtest_main
+  LABELS  neon2x quaternion)

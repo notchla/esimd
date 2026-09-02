@@ -190,6 +190,9 @@ Vec3fa b(1.0f, 2.0f, 3.0f);    // SSE-backed, x/y/z in one __m128
 
 Vec4f  h(n, 1.0f);             // homogeneous: a Vec3 plus w
 Vec3f  back = h.xyz();
+
+LinearSpace3f r = LinearSpace3f::rotate(Vec3f(0,0,1), 1.57f);
+Vec3f  turned = r * Vec3f(1,0,0);                          // ~(0,1,0)
 ```
 
 So far the layer provides:
@@ -204,6 +207,10 @@ So far the layer provides:
 | `Vec3ia` | 3 ints in a `__m128i`, 16-byte aligned |
 | `Vec3ba` | the 3-lane mask `Vec3ia`/`Vec3fa` comparisons return |
 | `Vec4<T>` | generic 4D vector (`Vec4b`/`Vec4uc`/`Vec4i`/`Vec4f`, `Vec4<vfloat4>`, …) |
+| `LinearSpace2<T>` | 2x2 matrix of `Vec2<T>` columns (`LinearSpace2f`, `LinearSpace2fa`) |
+| `LinearSpace3<T>` | 3x3 matrix of `Vec3<T>` columns (`LinearSpace3f`, `LinearSpace3fa`, `LinearSpace3fx`, `LinearSpace3ff`) |
+| `QuaternionT<T>` | rotation quaternion (`Quaternion3f`, `Quaternion3d`) |
+| `esimd::fastapprox` | polynomial approximations of sin/cos/exp/log & co, used by `slerp` |
 
 `Vec2<T>` is component-wise plumbing over `T`, so every operation it offers is one
 `T` already has: arithmetic, `min`/`max`, the `madd`/`msub`/`nmadd`/`nmsub` family,
@@ -228,6 +235,14 @@ reductions, `dot`/`length`/`normalize`/`distance`, `select`, `lerp` and
 `shift_right_1` — no cross product and no SSE companion. It converts both ways with
 `Vec3<T>`: `Vec4<T>(xyz, w)` and `Vec3fx` going in, `xyz()` or an implicit conversion
 coming out.
+
+`LinearSpace2<T>`/`LinearSpace3<T>` hold column vectors (`vx`, `vy`, `vz`) and offer
+`det`, `adjoint`, `inverse` (aliased `rcp`), `transposed`, the `rowN` accessors,
+`scale`/`rotate` and the usual matrix arithmetic. `LinearSpace3` adds `frame`,
+`clamp`, `xfmPoint`/`xfmVector`/`xfmNormal`, `select`, `lerp` and construction from a
+`QuaternionT`; its `Vec3fa` instantiation has a `transposed()` of its own, routed
+through the 4-wide `transpose`. `QuaternionT<T>` and `esimd::fastapprox` (sin, cos,
+sincos, tan, asin, acos, exp, log) came along as that constructor's dependencies.
 
 Two things to watch: `trunc` rounds toward zero on AArch64 but to nearest on x86
 (`floor`/`ceil` agree everywhere), and `sqr(Vec3<T>)` is `dot(a,a)` while
@@ -293,6 +308,10 @@ include/esimd/            public headers
                           vec3.h (Vec3<T>) / vec3fa.h (Vec3fa, Vec3fx)
                                            / vec3ia.h (Vec3ia) / vec3ba.h (Vec3ba)
                           vec4.h (Vec4<T>)
+                          linearspace2.h (LinearSpace2<T>)
+                          linearspace3.h (LinearSpace3<T>)
+                            / quaternion.h (QuaternionT<T>)
+                            / transcendental.h (esimd::fastapprox)
 extern/                   googletest, benchmark (git submodules)
 tests/                    GoogleTest correctness suites (one exe per ISA)
 benchmarks/               Google Benchmark perf suites (one exe per ISA)
@@ -325,7 +344,9 @@ are held to the same ULP bounds (`ctest -L trig` runs just those) — and
 `esimd_test_vec2_*`, `esimd_test_vec3_*` and `esimd_test_vec4_*`, which check
 `Vec2<T>`/`Vec3<T>`/`Vec4<T>` at `T` = scalar and at every vector width the backend
 defines, plus the SSE companions `Vec2fa`, `Vec3fa`/`Vec3fx`, `Vec3ia` and `Vec3ba`
-(`ctest -L vec2`, `-L vec3`, `-L vec4`).
+(`ctest -L vec2`, `-L vec3`, `-L vec4`), and `esimd_test_linearspace_*` /
+`esimd_test_quaternion_*` for the matrices, quaternions and `fastapprox`
+(`-L linearspace`, `-L quaternion`).
 By default only the ISA variants the build host can *execute* are built and run
 (detected at configure time), so an AVX512 binary never faults on an older CPU. Pass
 `-DESIMD_BUILD_ALL_ISA=ON` to force-build every variant for compile-only inspection.
