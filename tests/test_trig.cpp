@@ -9,8 +9,6 @@
 #include <esimd/trig.h>
 #include "test_helpers.h"
 
-#if defined(ESIMD_HAS_TRIG)
-
 using namespace esimd;
 using namespace esimd_test;
 
@@ -183,5 +181,3 @@ ESIMD_TRIG_TESTS(trig_vfloat16, vfloat16)
 ESIMD_TRIG_FAST_TESTS(trig_vfloat16, vfloat16)
 ESIMD_TRIG_TESTS(trig_vdouble8, vdouble8)
 #endif
-
-#endif // ESIMD_HAS_TRIG

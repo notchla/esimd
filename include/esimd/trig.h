@@ -4,8 +4,7 @@
 // Optional trigonometry layer for the esimd vector types, backed by SLEEF's
 // inline headers (Boost Software License 1.0, see detail/sleef/).
 //
-// Opt-in: <esimd/esimd.h> never pulls this in. Define ESIMD_DISABLE_TRIG (or
-// build with -DESIMD_ENABLE_TRIG=OFF) to compile it away entirely.
+// Opt-in: <esimd/esimd.h> never pulls this in.
 //
 // COMPILE THIS TRANSLATION UNIT WITH -ffp-contract=off. SLEEF reconstructs the
 // rounding error of an unfused a*b, which a contracted FMA discards, so the ULP
@@ -41,28 +40,21 @@
 #  pragma GCC diagnostic ignored "-Wunused-function"
 #endif
 
-#if defined(ESIMD_DISABLE_TRIG)
-// nothing: the layer is switched off, ESIMD_HAS_TRIG stays undefined
-#elif defined(ESIMD_ARM64)
-#  define ESIMD_HAS_TRIG
+#if defined(ESIMD_ARM64)
 #  include "detail/sleef/sleefinline_advsimd.h"
 #elif defined(__AVX2__)
-#  define ESIMD_HAS_TRIG
 #  include "detail/sleef/sleefinline_avx2128.h"
 #  include "detail/sleef/sleefinline_avx2.h"
 #  if defined(__AVX512F__)
 #    include "detail/sleef/sleefinline_avx512f.h"
 #  endif
 #else // SSE4.2, plain AVX: no SLEEF inline header exists for a non-FMA target
-#  define ESIMD_HAS_TRIG
 #  define ESIMD_TRIG_SCALAR_FALLBACK
 #endif
 
 #if defined(__GNUC__)
 #  pragma GCC diagnostic pop
 #endif
-
-#if defined(ESIMD_HAS_TRIG)
 
 namespace esimd
 {
@@ -223,5 +215,3 @@ namespace esimd
 
 #endif // ESIMD_TRIG_SCALAR_FALLBACK
 }
-
-#endif // ESIMD_HAS_TRIG

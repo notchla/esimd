@@ -69,8 +69,7 @@ define must agree). Translation units that include `<esimd/trig.h>` additionally
 ## Trigonometry (optional)
 
 `<esimd/trig.h>` adds SLEEF-backed trigonometry to the existing vector types. It is
-enabled by default (`ESIMD_ENABLE_TRIG`) but never implicit: `<esimd/esimd.h>` does
-not pull it in.
+opt-in by include: `<esimd/esimd.h>` does not pull it in.
 
 ```cpp
 #include <esimd/trig.h>
@@ -126,25 +125,6 @@ so SSE4.2 and plain AVX fall back to a per-lane libm loop.
 `fast_sin` buy nothing there. Accuracy is your libm's rather than SLEEF's; glibc stays
 inside the `u10` bound, and the test suite holds the fallback to it.
 
-### Switching it off
-
-`-DESIMD_ENABLE_TRIG=OFF` makes `<esimd/trig.h>` inert (it still compiles, but declares
-nothing and leaves `ESIMD_HAS_TRIG` undefined), skips the `esimd_test_trig_*` targets,
-and drops the vendored SLEEF headers from the install. It travels on the
-`esimd::esimd` interface target as `ESIMD_DISABLE_TRIG`, so `find_package(esimd)`
-consumers inherit the choice; the define is negative, so putting `include/` on your
-path without CMake still gets the enabled default.
-
-`ESIMD_HAS_TRIG` says the API is present. It is defined on every ISA unless the layer
-is switched off, so guard on it only to stay compatible with an `OFF` build:
-
-```cpp
-#include <esimd/trig.h>
-#ifdef ESIMD_HAS_TRIG
-  vfloatx s = sin(v);
-#endif
-```
-
 ### Regenerating the SLEEF headers
 
 The vendored headers in `include/esimd/detail/sleef/` are generated artifacts, checked
@@ -170,7 +150,7 @@ Copy the resulting `build*/include/sleefinline_*.h` into
 
 `<esimd/types.h>` adds the geometric types embree builds on top of the simd
 registers. It is opt-in by include — `<esimd/esimd.h>` does not pull it in — and, unlike
-`<esimd/trig.h>`, needs no CMake option, no vendored third-party headers and no
+`<esimd/trig.h>`, needs no vendored third-party headers and no
 special compile flags. Just include it.
 
 ```cpp
@@ -274,9 +254,8 @@ esimd_add_isa_target(app_sse    SSE42  SOURCES main.cpp)
 esimd_add_isa_target(app_avx512 AVX512 SOURCES main.cpp)
 ```
 
-Build options: `ESIMD_BUILD_TESTS`, `ESIMD_BUILD_BENCHMARKS`, `ESIMD_BUILD_EXAMPLES`,
-`ESIMD_INSTALL` and `ESIMD_ENABLE_TRIG` default to `ON`; `ESIMD_BUILD_ALL_ISA`
-defaults to `OFF`.
+Build options: `ESIMD_BUILD_TESTS`, `ESIMD_BUILD_BENCHMARKS`, `ESIMD_BUILD_EXAMPLES`
+and `ESIMD_INSTALL` default to `ON`; `ESIMD_BUILD_ALL_ISA` defaults to `OFF`.
 
 `esimd_add_isa_target(name <ISA> SOURCES ... [LINKS ...] [LABELS ...])` compiles the
 sources with `ESIMD_FLAGS_<ISA>`, links `esimd::esimd`, and — unless
