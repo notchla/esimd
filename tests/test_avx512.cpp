@@ -36,6 +36,10 @@ TEST(vboolf16, masks) {
   EXPECT_TRUE (any(vboolf16(0x0010)));
   EXPECT_FALSE(any(vboolf16(0x0000)));
   EXPECT_TRUE (none(vboolf16(0x0000)));
+  EXPECT_TRUE (reduce_and(vboolf16(0xFFFF)));
+  EXPECT_FALSE(reduce_and(vboolf16(0xFFFE)));
+  EXPECT_TRUE (reduce_or(vboolf16(0x0010)));
+  EXPECT_FALSE(reduce_or(vboolf16(0x0000)));
 }
 
 TEST(vboolf16, logical_set_get_clear) {
@@ -182,6 +186,22 @@ TEST(vboold8, masks_and_logical) {
   EXPECT_TRUE(all(vboold8(0xFF)));
   EXPECT_TRUE(any(vboold8(0x10)));
   EXPECT_TRUE(none(vboold8(0x00)));
+  EXPECT_TRUE(reduce_and(vboold8(0xFF)));
+  EXPECT_FALSE(reduce_and(vboold8(0x7F)));
+  EXPECT_TRUE(reduce_or(vboold8(0x10)));
+  EXPECT_FALSE(reduce_or(vboold8(0x00)));
+}
+
+// avx.h pulls in the __mmask variants of vboolf8 / vboold4 under AVX512VL.
+TEST(vboolf8_vboold4, mask_reductions) {
+  EXPECT_TRUE(reduce_and(vboolf8(0xFF)));
+  EXPECT_FALSE(reduce_and(vboolf8(0xEF)));
+  EXPECT_TRUE(reduce_or(vboolf8(0x40)));
+  EXPECT_FALSE(reduce_or(vboolf8(0x00)));
+  EXPECT_TRUE(reduce_and(vboold4(0xF)));
+  EXPECT_FALSE(reduce_and(vboold4(0x7)));
+  EXPECT_TRUE(reduce_or(vboold4(0x8)));
+  EXPECT_FALSE(reduce_or(vboold4(0x0)));
 }
 
 TEST(vdouble8, arithmetic_fma_compare_reduce) {

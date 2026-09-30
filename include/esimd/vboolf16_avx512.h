@@ -104,6 +104,9 @@ namespace esimd
   /// Reduction Operations
   ////////////////////////////////////////////////////////////////////////////////
   
+  __forceinline bool reduce_and(const vboolf16& a) { return _mm512_kortestc(a,a) != 0; }
+  __forceinline bool reduce_or (const vboolf16& a) { return _mm512_kortestz(a,a) == 0; }
+
   __forceinline int all (const vboolf16& a) { return  _mm512_kortestc(a,a) != 0; }
   __forceinline int any (const vboolf16& a) { return  _mm512_kortestz(a,a) == 0; }
   __forceinline int none(const vboolf16& a) { return  _mm512_kortestz(a,a) != 0; }

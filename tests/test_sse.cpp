@@ -53,11 +53,9 @@ TEST(vboolf4, reductions) {
   EXPECT_TRUE(none(vboolf4(false)));
   EXPECT_EQ(movemask(vboolf4(true, false, true, false)), size_t(0x5));
   EXPECT_EQ(popcnt(vboolf4(true, false, true, true)), size_t(3));
-#if !defined(__AVX512VL__) // the __mmask vbool types have no reduce_and/or
   EXPECT_TRUE(reduce_and(vboolf4(true)));
   EXPECT_FALSE(reduce_and(vboolf4(true, true, false, true)));
   EXPECT_TRUE(reduce_or(vboolf4(false, false, true, false)));
-#endif
 }
 
 TEST(vboolf4, get_set_clear) {
@@ -279,6 +277,10 @@ TEST(vboold2, construct_logical_reduce) {
   EXPECT_TRUE(none(vboold2(esimd::False)));
   EXPECT_EQ(movemask(vboold2(0x2)), 0x2u);
   EXPECT_EQ(popcnt(vboold2(0x3)), 2u);
+  EXPECT_TRUE(reduce_and(vboold2(0x3)));
+  EXPECT_FALSE(reduce_and(vboold2(0x2)));
+  EXPECT_TRUE(reduce_or(vboold2(0x2)));
+  EXPECT_FALSE(reduce_or(vboold2(0x0)));
 }
 
 TEST(vdouble2, constructors_and_arithmetic) {
