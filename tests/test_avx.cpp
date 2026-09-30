@@ -269,6 +269,19 @@ TEST(vdouble4, constructors_and_arithmetic) {
   expect_eq(max(a, b), {4.0, 3.0, 3.0, 4.0});
 }
 
+TEST(vdouble4, masked_load_store) {
+  alignas(32) const double mem[4] = {1.0, 2.0, 3.0, 4.0};
+  expect_eq(vdouble4::load (vboold4(0x5), mem), {1.0, 0.0, 3.0, 0.0});
+  expect_eq(vdouble4::loadu(vboold4(0x5), mem), {1.0, 0.0, 3.0, 0.0});
+  alignas(32) double out[4] = {-1.0, -1.0, -1.0, -1.0};
+  vdouble4::store(vboold4(0x6), out, vdouble4(5.0, 6.0, 7.0, 8.0));
+  EXPECT_DOUBLE_EQ(out[0], -1.0); EXPECT_DOUBLE_EQ(out[1], 6.0);
+  EXPECT_DOUBLE_EQ(out[2], 7.0);  EXPECT_DOUBLE_EQ(out[3], -1.0);
+  vdouble4::storeu(vboold4(0x9), out, vdouble4(5.0, 6.0, 7.0, 8.0));
+  EXPECT_DOUBLE_EQ(out[0], 5.0); EXPECT_DOUBLE_EQ(out[1], 6.0);
+  EXPECT_DOUBLE_EQ(out[2], 7.0); EXPECT_DOUBLE_EQ(out[3], 8.0);
+}
+
 TEST(vdouble4, fma_compare_select_reduce) {
   const vdouble4 a(1.0, 2.0, 3.0, 4.0), b(2.0, 2.0, 2.0, 2.0), c(1.0, 1.0, 1.0, 1.0);
   expect_eq(madd (a, b, c), {3.0, 5.0, 7.0, 9.0});

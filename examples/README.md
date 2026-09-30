@@ -12,6 +12,7 @@ whole point of these folders: same source, different `-m`/`-D` flags → differe
 | `avx2/`    | `vint8`, `vuint8`, `vllong4` (native int)   | `-mavx2 -mfma -mf16c -mbmi -mbmi2 -mlzcnt -D__AVX2__ -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__LZCNT__ -D__BMI__` |
 | `avx512/`  | `vfloat16`, `vdouble8`, `vboolf16` masks    | `-march=skylake-avx512 -mavx2 -mfma -mf16c -mbmi -mbmi2 -mlzcnt -D__AVX512F__ -D__AVX512VL__ -D__AVX512DQ__ -D__AVX512BW__ -D__AVX2__ -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__LZCNT__ -D__BMI__` |
 | `portable/`| `vfloatx`, `vintx`, `vboolx`, `VSIZEX`       | *any* of the rows above — the same source builds for every ISA |
+| `portable_double/`| `vdoublexd`, `vbooldxd`, `VSIZEXD`   | the `avx/`, `avx2/` or `avx512/` row |
 
 The `-m` flags tell the compiler which instructions it may emit; the matching `-D`
 macros tell the esimd headers which backend to expose. They must agree — esimd's
@@ -35,6 +36,8 @@ cmake --build build
 # the width-agnostic example, one binary per ISA (VSIZEX = 4 or 8):
 ./build/examples/portable/esimd_example_portable_sse
 ./build/examples/portable/esimd_example_portable_avx2
+# the double-precision sibling (VSIZEXD = 4 or 8), AVX and up:
+./build/examples/portable_double/esimd_example_portable_double_avx2
 ```
 
 Only the ISAs your CPU can actually execute are built (host detection at configure

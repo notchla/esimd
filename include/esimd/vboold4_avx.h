@@ -42,6 +42,7 @@ namespace esimd
     __forceinline explicit operator const __m256() const { return _mm256_castpd_ps(v); }
     __forceinline explicit operator const __m256i() const { return _mm256_castpd_si256(v); }
     __forceinline operator const __m256d() const { return v; }
+    __forceinline const __m256i m256i() const { return _mm256_castpd_si256(v); }
 
     __forceinline vboold(int a)
     {

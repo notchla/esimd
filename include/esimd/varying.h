@@ -56,12 +56,15 @@ namespace esimd
 #if defined(__AVX512VL__) // SKX
   const int VSIZEX = 8;  // default size
   const int VSIZEL = 16; // large size
+  const int VSIZEXD = 8;
 #elif defined(__AVX__)
   const int VSIZEX = 8;
   const int VSIZEL = 8;
+  const int VSIZEXD = 4;
 #else
   const int VSIZEX = 4;
   const int VSIZEL = 4;
+  const int VSIZEXD = 4;
 #endif
 
   template<int N>
@@ -142,4 +145,8 @@ namespace esimd
   typedef vbool<VSIZEX>   vboolx;
   typedef vboolf<VSIZEX>  vboolfx;
   typedef vboold<VSIZEX>  vbooldx;
+
+  typedef vdouble<VSIZEXD> vdoublexd;
+  typedef vboold<VSIZEXD>  vbooldxd;
+  typedef vllong<VSIZEXD>  vllongxd;
 }

@@ -67,36 +67,21 @@ namespace esimd
     /// Loads and Stores
     ////////////////////////////////////////////////////////////////////////////////
 
+    static __forceinline vdouble8 load (const vdouble8* addr) { return _mm512_load_pd((double*)addr); }
+    static __forceinline vdouble8 load (const double* addr)   { return _mm512_load_pd(addr); }
+    static __forceinline vdouble8 loadu(const void* addr)     { return _mm512_loadu_pd((double*)addr); }
+
+    static __forceinline vdouble8 load (const vboold8& mask, const double* ptr) { return _mm512_mask_load_pd (_mm512_setzero_pd(),mask,ptr); }
+    static __forceinline vdouble8 loadu(const vboold8& mask, const double* ptr) { return _mm512_mask_loadu_pd(_mm512_setzero_pd(),mask,ptr); }
+
+    static __forceinline void store (void* ptr, const vdouble8& v) { _mm512_store_pd(ptr,v); }
+    static __forceinline void storeu(void* ptr, const vdouble8& v) { _mm512_storeu_pd(ptr,v); }
+
+    static __forceinline void store (const vboold8& mask, void* ptr, const vdouble8& v)   { _mm512_mask_store_pd (ptr,mask,v); }
+    static __forceinline void storeu(const vboold8& mask, double* ptr, const vdouble8& v) { _mm512_mask_storeu_pd(ptr,mask,v); }
+
     static __forceinline void store_nt(void *__restrict__ ptr, const vdouble8& a) {
       _mm512_stream_pd((double*)ptr, a);
-    }
-
-    static __forceinline vdouble8 loadu(const void* addr) {
-      return _mm512_loadu_pd((double*)addr);
-    }
-
-    static __forceinline vdouble8 load(const vdouble8* addr) {
-      return _mm512_load_pd((double*)addr);
-    }
-
-    static __forceinline vdouble8 load(const double* addr) {
-      return _mm512_load_pd(addr);
-    }
-
-    static __forceinline void store(void* ptr, const vdouble8& v) {
-      _mm512_store_pd(ptr, v);
-    }
-
-    static __forceinline void storeu(void* ptr, const vdouble8& v) {
-      _mm512_storeu_pd(ptr, v);
-    }
-
-    static __forceinline void storeu(const vboold8& mask, double* ptr, const vdouble8& f) {
-      _mm512_mask_storeu_pd(ptr, mask, f);
-    }
-
-    static __forceinline void store(const vboold8& mask, void* addr, const vdouble8& v2) {
-      _mm512_mask_store_pd(addr, mask, v2);
     }
 
     static __forceinline vdouble8 compact(const vboold8& mask, vdouble8& v) {

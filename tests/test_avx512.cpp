@@ -208,6 +208,17 @@ TEST(vdouble8, arithmetic_fma_compare_reduce) {
   EXPECT_DOUBLE_EQ(toScalar(a + vdouble8(3.0)), 3.0);
 }
 
+TEST(vdouble8, masked_load_store) {
+  alignas(64) const double mem[8] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
+  expect_eq(vdouble8::load (vboold8(0x55), mem), {1.0, 0.0, 3.0, 0.0, 5.0, 0.0, 7.0, 0.0});
+  expect_eq(vdouble8::loadu(vboold8(0x55), mem), {1.0, 0.0, 3.0, 0.0, 5.0, 0.0, 7.0, 0.0});
+  alignas(64) double out[8] = {-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0};
+  vdouble8::store(vboold8(0x0F), out, vdouble8(esimd::step));
+  for (int k = 0; k < 8; ++k) EXPECT_DOUBLE_EQ(out[k], k < 4 ? double(k) : -1.0) << "lane " << k;
+  vdouble8::storeu(vboold8(0xF0), out, vdouble8(esimd::step));
+  for (int k = 0; k < 8; ++k) EXPECT_DOUBLE_EQ(out[k], double(k)) << "lane " << k;
+}
+
 TEST(vdouble8, deinterleave) {
   double buf[17];
   buf[0] = -1.0;

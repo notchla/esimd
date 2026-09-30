@@ -64,25 +64,26 @@ namespace esimd
       _mm256_stream_pd(ptr, a);
     }
 
-    static __forceinline vdouble4 loadu(const double* addr) {
-      return _mm256_loadu_pd(addr);
-    }
+    static __forceinline vdouble4 load (const vdouble4* addr) { return _mm256_load_pd((double*)addr); }
+    static __forceinline vdouble4 load (const double* addr)   { return _mm256_load_pd(addr); }
+    static __forceinline vdouble4 loadu(const double* addr)   { return _mm256_loadu_pd(addr); }
 
-    static __forceinline vdouble4 load(const vdouble4* addr) {
-      return _mm256_load_pd((double*)addr);
-    }
+    static __forceinline void store (double* ptr, const vdouble4& v) { _mm256_store_pd(ptr,v); }
+    static __forceinline void storeu(double* ptr, const vdouble4& v) { _mm256_storeu_pd(ptr,v); }
 
-    static __forceinline vdouble4 load(const double* addr) {
-      return _mm256_load_pd(addr);
-    }
+#if defined(__AVX512VL__)
+    static __forceinline vdouble4 load (const vboold4& mask, const double* ptr) { return _mm256_mask_load_pd (_mm256_setzero_pd(),mask,ptr); }
+    static __forceinline vdouble4 loadu(const vboold4& mask, const double* ptr) { return _mm256_mask_loadu_pd(_mm256_setzero_pd(),mask,ptr); }
 
-    static __forceinline void store(double* ptr, const vdouble4& v) {
-      _mm256_store_pd(ptr, v);
-    }
+    static __forceinline void store (const vboold4& mask, double* ptr, const vdouble4& v) { _mm256_mask_store_pd (ptr,mask,v); }
+    static __forceinline void storeu(const vboold4& mask, double* ptr, const vdouble4& v) { _mm256_mask_storeu_pd(ptr,mask,v); }
+#else
+    static __forceinline vdouble4 load (const vboold4& mask, const double* ptr) { return _mm256_maskload_pd(ptr,mask.m256i()); }
+    static __forceinline vdouble4 loadu(const vboold4& mask, const double* ptr) { return _mm256_maskload_pd(ptr,mask.m256i()); }
 
-    static __forceinline void storeu(double* ptr, const vdouble4& v) {
-      _mm256_storeu_pd(ptr, v);
-    }
+    static __forceinline void store (const vboold4& mask, double* ptr, const vdouble4& v) { _mm256_maskstore_pd(ptr,mask.m256i(),v); }
+    static __forceinline void storeu(const vboold4& mask, double* ptr, const vdouble4& v) { _mm256_maskstore_pd(ptr,mask.m256i(),v); }
+#endif
 
     static __forceinline vdouble4 broadcast(const void* a) { return _mm256_set1_pd(*(double*)a); }
 
