@@ -79,8 +79,13 @@ namespace esimd
     static __forceinline void store (void* ptr, const vint8& f) { _mm256_store_ps((float*)ptr,_mm256_castsi256_ps(f)); }
     static __forceinline void storeu(void* ptr, const vint8& f) { _mm256_storeu_ps((float*)ptr,_mm256_castsi256_ps(f)); }
     
+#if ESIMD_MSVC_MASKSTORE_FALLBACK
+    static __forceinline void store (const vboolf8& mask, void* ptr, const vint8& f) { maskstore_lanes<8>(mask,(int*)ptr,f); }
+    static __forceinline void storeu(const vboolf8& mask, void* ptr, const vint8& f) { maskstore_lanes<8>(mask,(int*)ptr,f); }
+#else
     static __forceinline void store (const vboolf8& mask, void* ptr, const vint8& f) { _mm256_maskstore_ps((float*)ptr,_mm256_castps_si256(mask.v),_mm256_castsi256_ps(f)); }
     static __forceinline void storeu(const vboolf8& mask, void* ptr, const vint8& f) { _mm256_maskstore_ps((float*)ptr,_mm256_castps_si256(mask.v),_mm256_castsi256_ps(f)); }
+#endif
 
     static __forceinline void store_nt(void* ptr, const vint8& v) {
       _mm256_stream_ps((float*)ptr,_mm256_castsi256_ps(v));

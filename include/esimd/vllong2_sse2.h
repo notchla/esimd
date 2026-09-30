@@ -88,7 +88,7 @@ namespace esimd
     static __forceinline void storeu(const vboold2& mask, long long* ptr, const vllong2& f) {
 #if defined(__AVX512VL__)
       _mm_mask_storeu_epi64(ptr,mask,f);
-#elif defined(__AVX__) && !defined(ESIMD_ARM64)
+#elif defined(__AVX__) && !defined(ESIMD_ARM64) && !ESIMD_MSVC_MASKSTORE_FALLBACK
       _mm_maskstore_pd((double*)ptr,mask.m128i(),_mm_castsi128_pd(f));
 #else
       const size_t m = _mm_movemask_pd(mask);

@@ -506,5 +506,44 @@ namespace esimd
    __forceinline __mmask16 mm512_int2mask(int mask) {
      return (__mmask16)mask;
    }
+
+/* MSVC /O2 crashes (C1001) folding a k-mask intrinsic whose two operands are
+   equal constants, e.g. _mm512_kand(5, 5); integer ops avoid that path. */
+#if defined(_MSC_VER) && !defined(__clang__)
+   __forceinline __mmask16 mm512_kand (__mmask16 a, __mmask16 b) { return a & b; }
+   __forceinline __mmask16 mm512_kandn(__mmask16 a, __mmask16 b) { return ~a & b; }
+   __forceinline __mmask16 mm512_kor  (__mmask16 a, __mmask16 b) { return a | b; }
+   __forceinline __mmask16 mm512_kxor (__mmask16 a, __mmask16 b) { return a ^ b; }
+   __forceinline __mmask16 mm512_kxnor(__mmask16 a, __mmask16 b) { return ~(a ^ b); }
+   __forceinline __mmask16 mm512_knot (__mmask16 a) { return ~a; }
+   __forceinline int mm512_kortestz(__mmask16 a, __mmask16 b) { return (__mmask16)(a | b) == 0; }
+   __forceinline int mm512_kortestc(__mmask16 a, __mmask16 b) { return (__mmask16)(a | b) == 0xffff; }
+#else
+   __forceinline __mmask16 mm512_kand (__mmask16 a, __mmask16 b) { return _mm512_kand(a, b); }
+   __forceinline __mmask16 mm512_kandn(__mmask16 a, __mmask16 b) { return _mm512_kandn(a, b); }
+   __forceinline __mmask16 mm512_kor  (__mmask16 a, __mmask16 b) { return _mm512_kor(a, b); }
+   __forceinline __mmask16 mm512_kxor (__mmask16 a, __mmask16 b) { return _mm512_kxor(a, b); }
+   __forceinline __mmask16 mm512_kxnor(__mmask16 a, __mmask16 b) { return _mm512_kxnor(a, b); }
+   __forceinline __mmask16 mm512_knot (__mmask16 a) { return _mm512_knot(a); }
+   __forceinline int mm512_kortestz(__mmask16 a, __mmask16 b) { return _mm512_kortestz(a, b); }
+   __forceinline int mm512_kortestc(__mmask16 a, __mmask16 b) { return _mm512_kortestc(a, b); }
+#endif
+#endif
+
+/* MSVC treats vmaskmovps/pd as writing every lane, so it may reuse the
+   destination's stack slot while masked-off lanes are still live. The AVX-512
+   _mm*_mask_store* intrinsics are not affected. */
+#if defined(_MSC_VER) && !defined(__clang__) && !defined(ESIMD_ARM64)
+#  define ESIMD_MSVC_MASKSTORE_FALLBACK 1
+#else
+#  define ESIMD_MSVC_MASKSTORE_FALLBACK 0
+#endif
+
+#if ESIMD_MSVC_MASKSTORE_FALLBACK
+   template<size_t N, typename T, typename M, typename V>
+   __forceinline void maskstore_lanes(const M& mask, T* ptr, const V& v) {
+     for (size_t i = 0; i < N; i++)
+       if (mask[i]) ptr[i] = v[i];
+   }
 #endif
 }

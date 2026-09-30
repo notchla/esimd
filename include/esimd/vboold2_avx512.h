@@ -62,17 +62,17 @@ namespace esimd
   /// Unary Operators
   ////////////////////////////////////////////////////////////////////////////////
 
-  __forceinline vboold2 operator !(const vboold2& a) { return _mm512_kandn(a, 0x3); }
+  __forceinline vboold2 operator !(const vboold2& a) { return mm512_kandn(a, 0x3); }
 
   ////////////////////////////////////////////////////////////////////////////////
   /// Binary Operators
   ////////////////////////////////////////////////////////////////////////////////
 
-  __forceinline vboold2 operator &(const vboold2& a, const vboold2& b) { return _mm512_kand(a, b); }
-  __forceinline vboold2 operator |(const vboold2& a, const vboold2& b) { return _mm512_kor(a, b); }
-  __forceinline vboold2 operator ^(const vboold2& a, const vboold2& b) { return _mm512_kxor(a, b); }
+  __forceinline vboold2 operator &(const vboold2& a, const vboold2& b) { return mm512_kand(a, b); }
+  __forceinline vboold2 operator |(const vboold2& a, const vboold2& b) { return mm512_kor(a, b); }
+  __forceinline vboold2 operator ^(const vboold2& a, const vboold2& b) { return mm512_kxor(a, b); }
 
-  __forceinline vboold2 andn(const vboold2& a, const vboold2& b) { return _mm512_kandn(b, a); }
+  __forceinline vboold2 andn(const vboold2& a, const vboold2& b) { return mm512_kandn(b, a); }
 
   ////////////////////////////////////////////////////////////////////////////////
   /// Assignment Operators
@@ -86,11 +86,11 @@ namespace esimd
   /// Comparison Operators + Select
   ////////////////////////////////////////////////////////////////////////////////
 
-  __forceinline vboold2 operator !=(const vboold2& a, const vboold2& b) { return _mm512_kxor(a, b); }
-  __forceinline vboold2 operator ==(const vboold2& a, const vboold2& b) { return _mm512_kand(_mm512_kxnor(a, b), 0x3); }
+  __forceinline vboold2 operator !=(const vboold2& a, const vboold2& b) { return mm512_kxor(a, b); }
+  __forceinline vboold2 operator ==(const vboold2& a, const vboold2& b) { return mm512_kand(mm512_kxnor(a, b), 0x3); }
 
   __forceinline vboold2 select(const vboold2& s, const vboold2& a, const vboold2& b) {
-    return _mm512_kor(_mm512_kand(s, a), _mm512_kandn(s, b));
+    return mm512_kor(mm512_kand(s, a), mm512_kandn(s, b));
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -98,11 +98,11 @@ namespace esimd
   ////////////////////////////////////////////////////////////////////////////////
 
   __forceinline bool reduce_and(const vboold2& a) { return a.v == 0x3; }
-  __forceinline bool reduce_or (const vboold2& a) { return _mm512_kortestz(a, a) == 0; }
+  __forceinline bool reduce_or (const vboold2& a) { return mm512_kortestz(a, a) == 0; }
 
   __forceinline int all (const vboold2& a) { return a.v == 0x3; }
-  __forceinline int any (const vboold2& a) { return _mm512_kortestz(a, a) == 0; }
-  __forceinline int none(const vboold2& a) { return _mm512_kortestz(a, a) != 0; }
+  __forceinline int any (const vboold2& a) { return mm512_kortestz(a, a) == 0; }
+  __forceinline int none(const vboold2& a) { return mm512_kortestz(a, a) != 0; }
 
   __forceinline int all (const vboold2& valid, const vboold2& b) { return all((!valid) | b); }
   __forceinline int any (const vboold2& valid, const vboold2& b) { return any(valid & b); }

@@ -80,8 +80,13 @@ namespace esimd
     static __forceinline vdouble2 load (const vboold2& mask, const double* ptr) { return _mm_maskload_pd(ptr,mask.m128i()); }
     static __forceinline vdouble2 loadu(const vboold2& mask, const double* ptr) { return _mm_maskload_pd(ptr,mask.m128i()); }
 
+#if ESIMD_MSVC_MASKSTORE_FALLBACK
+    static __forceinline void store (const vboold2& mask, double* ptr, const vdouble2& v) { maskstore_lanes<2>(mask,ptr,v); }
+    static __forceinline void storeu(const vboold2& mask, double* ptr, const vdouble2& v) { maskstore_lanes<2>(mask,ptr,v); }
+#else
     static __forceinline void store (const vboold2& mask, double* ptr, const vdouble2& v) { _mm_maskstore_pd(ptr,mask.m128i(),v); }
     static __forceinline void storeu(const vboold2& mask, double* ptr, const vdouble2& v) { _mm_maskstore_pd(ptr,mask.m128i(),v); }
+#endif
 #else
     // Per lane, so masked-off lanes are never touched.
     static __forceinline vdouble2 loadu(const vboold2& mask, const double* ptr) {

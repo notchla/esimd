@@ -69,17 +69,17 @@ namespace esimd
   /// Unary Operators
   ////////////////////////////////////////////////////////////////////////////////
   
-  __forceinline vboolf16 operator !(const vboolf16& a) { return _mm512_knot(a); }
+  __forceinline vboolf16 operator !(const vboolf16& a) { return mm512_knot(a); }
   
    ////////////////////////////////////////////////////////////////////////////////
    /// Binary Operators
    ////////////////////////////////////////////////////////////////////////////////
   
-  __forceinline vboolf16 operator &(const vboolf16& a, const vboolf16& b) { return _mm512_kand(a,b); }
-  __forceinline vboolf16 operator |(const vboolf16& a, const vboolf16& b) { return _mm512_kor(a,b); }
-  __forceinline vboolf16 operator ^(const vboolf16& a, const vboolf16& b) { return _mm512_kxor(a,b); }
+  __forceinline vboolf16 operator &(const vboolf16& a, const vboolf16& b) { return mm512_kand(a,b); }
+  __forceinline vboolf16 operator |(const vboolf16& a, const vboolf16& b) { return mm512_kor(a,b); }
+  __forceinline vboolf16 operator ^(const vboolf16& a, const vboolf16& b) { return mm512_kxor(a,b); }
 
-  __forceinline vboolf16 andn(const vboolf16& a, const vboolf16& b) { return _mm512_kandn(b,a); }
+  __forceinline vboolf16 andn(const vboolf16& a, const vboolf16& b) { return mm512_kandn(b,a); }
   
   ////////////////////////////////////////////////////////////////////////////////
   /// Assignment Operators
@@ -93,23 +93,23 @@ namespace esimd
   /// Comparison Operators + Select
   ////////////////////////////////////////////////////////////////////////////////
   
-  __forceinline vboolf16 operator !=(const vboolf16& a, const vboolf16& b) { return _mm512_kxor(a, b); }
-  __forceinline vboolf16 operator ==(const vboolf16& a, const vboolf16& b) { return _mm512_kxnor(a, b); }
+  __forceinline vboolf16 operator !=(const vboolf16& a, const vboolf16& b) { return mm512_kxor(a, b); }
+  __forceinline vboolf16 operator ==(const vboolf16& a, const vboolf16& b) { return mm512_kxnor(a, b); }
   
   __forceinline vboolf16 select(const vboolf16& s, const vboolf16& a, const vboolf16& b) {
-    return _mm512_kor(_mm512_kand(s,a),_mm512_kandn(s,b));
+    return mm512_kor(mm512_kand(s,a),mm512_kandn(s,b));
   }
 
   ////////////////////////////////////////////////////////////////////////////////
   /// Reduction Operations
   ////////////////////////////////////////////////////////////////////////////////
   
-  __forceinline bool reduce_and(const vboolf16& a) { return _mm512_kortestc(a,a) != 0; }
-  __forceinline bool reduce_or (const vboolf16& a) { return _mm512_kortestz(a,a) == 0; }
+  __forceinline bool reduce_and(const vboolf16& a) { return mm512_kortestc(a,a) != 0; }
+  __forceinline bool reduce_or (const vboolf16& a) { return mm512_kortestz(a,a) == 0; }
 
-  __forceinline int all (const vboolf16& a) { return  _mm512_kortestc(a,a) != 0; }
-  __forceinline int any (const vboolf16& a) { return  _mm512_kortestz(a,a) == 0; }
-  __forceinline int none(const vboolf16& a) { return  _mm512_kortestz(a,a) != 0; }
+  __forceinline int all (const vboolf16& a) { return  mm512_kortestc(a,a) != 0; }
+  __forceinline int any (const vboolf16& a) { return  mm512_kortestz(a,a) == 0; }
+  __forceinline int none(const vboolf16& a) { return  mm512_kortestz(a,a) != 0; }
 
   __forceinline int all (const vboolf16& valid, const vboolf16& b) { return all((!valid) | b); }
   __forceinline int any (const vboolf16& valid, const vboolf16& b) { return any(valid & b); }

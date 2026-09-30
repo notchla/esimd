@@ -110,8 +110,13 @@ namespace esimd
     static __forceinline vfloat8 load (const vboolf8& mask, const void* ptr) { return _mm256_maskload_ps((float*)ptr,_mm256_castps_si256(mask.v)); }
     static __forceinline vfloat8 loadu(const vboolf8& mask, const void* ptr) { return _mm256_maskload_ps((float*)ptr,_mm256_castps_si256(mask.v)); }
 
+#if ESIMD_MSVC_MASKSTORE_FALLBACK
+    static __forceinline void store (const vboolf8& mask, void* ptr, const vfloat8& v) { maskstore_lanes<8>(mask,(float*)ptr,v); }
+    static __forceinline void storeu(const vboolf8& mask, void* ptr, const vfloat8& v) { maskstore_lanes<8>(mask,(float*)ptr,v); }
+#else
     static __forceinline void store (const vboolf8& mask, void* ptr, const vfloat8& v) { _mm256_maskstore_ps((float*)ptr,_mm256_castps_si256(mask.v),v); }
     static __forceinline void storeu(const vboolf8& mask, void* ptr, const vfloat8& v) { _mm256_maskstore_ps((float*)ptr,_mm256_castps_si256(mask.v),v); }
+#endif
 #endif
     
 #if defined(__AVX2__)

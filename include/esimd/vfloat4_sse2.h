@@ -93,8 +93,13 @@ namespace esimd
     static __forceinline vfloat4 load (const vboolf4& mask, const void* ptr) { return _mm_maskload_ps((float*)ptr,mask.m128i()); }
     static __forceinline vfloat4 loadu(const vboolf4& mask, const void* ptr) { return _mm_maskload_ps((float*)ptr,mask.m128i()); }
 
+#if ESIMD_MSVC_MASKSTORE_FALLBACK
+    static __forceinline void store (const vboolf4& mask, void* ptr, const vfloat4& v) { maskstore_lanes<4>(mask,(float*)ptr,v); }
+    static __forceinline void storeu(const vboolf4& mask, void* ptr, const vfloat4& v) { maskstore_lanes<4>(mask,(float*)ptr,v); }
+#else
     static __forceinline void store (const vboolf4& mask, void* ptr, const vfloat4& v) { _mm_maskstore_ps((float*)ptr,mask.m128i(),v); }
     static __forceinline void storeu(const vboolf4& mask, void* ptr, const vfloat4& v) { _mm_maskstore_ps((float*)ptr,mask.m128i(),v); }
+#endif
 #else
     static __forceinline vfloat4 load (const vboolf4& mask, const void* ptr) { return _mm_and_ps(_mm_load_ps ((float*)ptr),mask); }
     static __forceinline vfloat4 loadu(const vboolf4& mask, const void* ptr) { return _mm_and_ps(_mm_loadu_ps((float*)ptr),mask); }

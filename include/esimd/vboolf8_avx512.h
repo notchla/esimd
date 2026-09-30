@@ -76,17 +76,17 @@ namespace esimd
   /// Unary Operators
   ////////////////////////////////////////////////////////////////////////////////
 
-  __forceinline vboolf8 operator !(const vboolf8& a) { return _mm512_knot(a); }
+  __forceinline vboolf8 operator !(const vboolf8& a) { return mm512_knot(a); }
 
   ////////////////////////////////////////////////////////////////////////////////
   /// Binary Operators
   ////////////////////////////////////////////////////////////////////////////////
 
-  __forceinline vboolf8 operator &(const vboolf8& a, const vboolf8& b) { return _mm512_kand(a, b); }
-  __forceinline vboolf8 operator |(const vboolf8& a, const vboolf8& b) { return _mm512_kor(a, b); }
-  __forceinline vboolf8 operator ^(const vboolf8& a, const vboolf8& b) { return _mm512_kxor(a, b); }
+  __forceinline vboolf8 operator &(const vboolf8& a, const vboolf8& b) { return mm512_kand(a, b); }
+  __forceinline vboolf8 operator |(const vboolf8& a, const vboolf8& b) { return mm512_kor(a, b); }
+  __forceinline vboolf8 operator ^(const vboolf8& a, const vboolf8& b) { return mm512_kxor(a, b); }
 
-  __forceinline vboolf8 andn(const vboolf8& a, const vboolf8& b) { return _mm512_kandn(b, a); }
+  __forceinline vboolf8 andn(const vboolf8& a, const vboolf8& b) { return mm512_kandn(b, a); }
 
   ////////////////////////////////////////////////////////////////////////////////
   /// Assignment Operators
@@ -100,11 +100,11 @@ namespace esimd
   /// Comparison Operators + Select
   ////////////////////////////////////////////////////////////////////////////////
 
-  __forceinline vboolf8 operator !=(const vboolf8& a, const vboolf8& b) { return _mm512_kxor(a, b); }
-  __forceinline vboolf8 operator ==(const vboolf8& a, const vboolf8& b) { return _mm512_kxnor(a, b); }
+  __forceinline vboolf8 operator !=(const vboolf8& a, const vboolf8& b) { return mm512_kxor(a, b); }
+  __forceinline vboolf8 operator ==(const vboolf8& a, const vboolf8& b) { return mm512_kxnor(a, b); }
 
   __forceinline vboolf8 select(const vboolf8& s, const vboolf8& a, const vboolf8& b) {
-    return _mm512_kor(_mm512_kand(s, a), _mm512_kandn(s, b));
+    return mm512_kor(mm512_kand(s, a), mm512_kandn(s, b));
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -112,11 +112,11 @@ namespace esimd
   ////////////////////////////////////////////////////////////////////////////////
 
   __forceinline bool reduce_and(const vboolf8& a) { return a.v == 0xff; }
-  __forceinline bool reduce_or (const vboolf8& a) { return _mm512_kortestz(a, a) == 0; }
+  __forceinline bool reduce_or (const vboolf8& a) { return mm512_kortestz(a, a) == 0; }
 
   __forceinline int all (const vboolf8& a) { return a.v == 0xff; }
-  __forceinline int any (const vboolf8& a) { return _mm512_kortestz(a, a) == 0; }
-  __forceinline int none(const vboolf8& a) { return _mm512_kortestz(a, a) != 0; }
+  __forceinline int any (const vboolf8& a) { return mm512_kortestz(a, a) == 0; }
+  __forceinline int none(const vboolf8& a) { return mm512_kortestz(a, a) != 0; }
 
   __forceinline int all (const vboolf8& valid, const vboolf8& b) { return all((!valid) | b); }
   __forceinline int any (const vboolf8& valid, const vboolf8& b) { return any(valid & b); }

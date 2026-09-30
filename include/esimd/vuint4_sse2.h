@@ -86,8 +86,13 @@ namespace esimd
     static __forceinline vuint4 load (const vbool4& mask, const void* a) { return _mm_castps_si128(_mm_maskload_ps((float*)a,mask.m128i())); }
     static __forceinline vuint4 loadu(const vbool4& mask, const void* a) { return _mm_castps_si128(_mm_maskload_ps((float*)a,mask.m128i())); }
 
+#if ESIMD_MSVC_MASKSTORE_FALLBACK
+    static __forceinline void store (const vboolf4& mask, void* ptr, const vuint4& i) { maskstore_lanes<4>(mask,(unsigned int*)ptr,i); }
+    static __forceinline void storeu(const vboolf4& mask, void* ptr, const vuint4& i) { maskstore_lanes<4>(mask,(unsigned int*)ptr,i); }
+#else
     static __forceinline void store (const vboolf4& mask, void* ptr, const vuint4& i) { _mm_maskstore_ps((float*)ptr,mask.m128i(),_mm_castsi128_ps(i)); }
     static __forceinline void storeu(const vboolf4& mask, void* ptr, const vuint4& i) { _mm_maskstore_ps((float*)ptr,mask.m128i(),_mm_castsi128_ps(i)); }
+#endif
 #else
     static __forceinline vuint4 load (const vbool4& mask, const void* a) { return _mm_and_si128(_mm_load_si128 ((__m128i*)a),mask.m128i()); }
     static __forceinline vuint4 loadu(const vbool4& mask, const void* a) { return _mm_and_si128(_mm_loadu_si128((__m128i*)a),mask.m128i()); }

@@ -104,8 +104,13 @@ namespace esimd
     static __forceinline vint8 load (const vboolf8& mask, const void* ptr) { return _mm256_castps_si256(_mm256_maskload_ps((float*)ptr,mask.operator const __m256i())); }
     static __forceinline vint8 loadu(const vboolf8& mask, const void* ptr) { return _mm256_castps_si256(_mm256_maskload_ps((float*)ptr,mask.operator const __m256i())); }
 
+#if ESIMD_MSVC_MASKSTORE_FALLBACK
+    static __forceinline void store (const vboolf8& mask, void* ptr, const vint8& v) { maskstore_lanes<8>(mask,(int*)ptr,v); }
+    static __forceinline void storeu(const vboolf8& mask, void* ptr, const vint8& v) { maskstore_lanes<8>(mask,(int*)ptr,v); }
+#else
     static __forceinline void store (const vboolf8& mask, void* ptr, const vint8& v) { _mm256_maskstore_epi32((int*)ptr,mask.operator const __m256i(),v); }
     static __forceinline void storeu(const vboolf8& mask, void* ptr, const vint8& v) { _mm256_maskstore_epi32((int*)ptr,mask.operator const __m256i(),v); }
+#endif
 #endif
     
     static __forceinline vint8 load_nt(void* ptr) {

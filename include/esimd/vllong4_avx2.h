@@ -90,6 +90,8 @@ namespace esimd
     static __forceinline void storeu(const vboold4& mask, long long* ptr, const vllong4& f) {
 #if defined(__AVX512VL__)
       _mm256_mask_storeu_epi64(ptr,mask,f);
+#elif ESIMD_MSVC_MASKSTORE_FALLBACK
+      maskstore_lanes<4>(mask,ptr,f);
 #else
       _mm256_maskstore_pd((double*)ptr,(__m256i)mask,_mm256_castsi256_pd(f));
 #endif
@@ -98,6 +100,8 @@ namespace esimd
     static __forceinline void store(const vboold4& mask, void* ptr, const vllong4& f) {
 #if defined(__AVX512VL__)
       _mm256_mask_store_epi64(ptr,mask,f);
+#elif ESIMD_MSVC_MASKSTORE_FALLBACK
+      maskstore_lanes<4>(mask,(long long*)ptr,f);
 #else
       _mm256_maskstore_pd((double*)ptr,(__m256i)mask,_mm256_castsi256_pd(f));
 #endif
