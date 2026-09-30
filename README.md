@@ -87,7 +87,7 @@ vfloat8 sn, cs; sincos(x, sn, cs);   // one shared range reduction
 `sin cos tan sincos asin acos atan atan2`, each in three flavours: the plain name
 (SLEEF `u10`), a `_u35` suffix (SLEEF `u35`), and `fast_sin` / `fast_cos` (SLEEF
 `u3500`, single precision only — SLEEF has no `fasttan` and no double `u3500`).
-Overloads exist for every `vfloat`/`vdouble` width the active ISA defines, except `vdouble2`.
+Overloads exist for every `vfloat`/`vdouble` width the active ISA defines.
 
 > **Every translation unit including `<esimd/trig.h>` must be compiled with
 > `-ffp-contract=off`.** SLEEF's double-double sequences reconstruct the rounding
@@ -107,14 +107,14 @@ Each width dispatches to the SLEEF implementation built for that same instructio
 — no cross-ISA emulation. SLEEF only generates inline headers for FMA-capable targets,
 so SSE4.2 and plain AVX fall back to a per-lane libm loop.
 
-| ISA      | vfloat4    | vfloat8              | vfloat16   | vdouble4 | vdouble8   |
-|----------|------------|----------------------|------------|----------|------------|
-| `SSE42`  | *scalar*   | —                    | —          | —        | —          |
-| `AVX`    | *scalar*   | *scalar*             | —          | *scalar* | —          |
-| `AVX2`   | `avx2128`  | `avx2`               | —          | `avx2`   | —          |
-| `AVX512` | `avx2128`  | `avx2`               | `avx512f`  | `avx2`   | `avx512f`  |
-| `NEON`   | `advsimd`  | —                    | —          | —        | —          |
-| `NEON2X` | `advsimd`  | `advsimd` ×2 (lo/hi) | —          | —        | —          |
+| ISA      | vfloat4    | vfloat8              | vfloat16   | vdouble2  | vdouble4 | vdouble8   |
+|----------|------------|----------------------|------------|-----------|----------|------------|
+| `SSE42`  | *scalar*   | —                    | —          | *scalar*  | —        | —          |
+| `AVX`    | *scalar*   | *scalar*             | —          | *scalar*  | *scalar* | —          |
+| `AVX2`   | `avx2128`  | `avx2`               | —          | `avx2128` | `avx2`   | —          |
+| `AVX512` | `avx2128`  | `avx2`               | `avx512f`  | `avx2128` | `avx2`   | `avx512f`  |
+| `NEON`   | `advsimd`  | —                    | —          | `advsimd` | —        | —          |
+| `NEON2X` | `advsimd`  | `advsimd` ×2 (lo/hi) | —          | `advsimd` | —        | —          |
 
 `—` means the ISA has no such type at all, not that the function is missing.
 

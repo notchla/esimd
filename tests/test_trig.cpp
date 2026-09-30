@@ -167,6 +167,7 @@ TEST(SUITE, fast_sin_cos) {                                                     
 // one every backend has: SSE4.2 stops there, and ARM has no vdouble at all.
 ESIMD_TRIG_TESTS(trig_vfloat4, vfloat4)
 ESIMD_TRIG_FAST_TESTS(trig_vfloat4, vfloat4)
+ESIMD_TRIG_TESTS(trig_vdouble2, vdouble2)
 
 #if defined(__AVX__) // AVX, AVX2, AVX512 and NEON2X all reach the 8-wide types
 ESIMD_TRIG_TESTS(trig_vfloat8, vfloat8)

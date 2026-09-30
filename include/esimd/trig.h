@@ -108,6 +108,7 @@ namespace esimd
 
   ESIMD_TRIG_SCALAR_DEFS(vfloat4)
   ESIMD_TRIG_SCALAR_FAST_DEFS(vfloat4)
+  ESIMD_TRIG_SCALAR_DEFS(vdouble2)
 #if defined(__AVX__) // plain AVX also has the 8-wide types
   ESIMD_TRIG_SCALAR_DEFS(vfloat8)
   ESIMD_TRIG_SCALAR_FAST_DEFS(vfloat8)
@@ -149,11 +150,12 @@ namespace esimd
 
 #if defined(ESIMD_ARM64)
 
-  // sse2neon typedefs __m128 as float32x4_t, which is exactly what the advsimd
-  // functions take, so vfloat4 converts straight through. vdouble2 has no trig
-  // overloads yet (and vdouble4 is x86-only), so ARM gets float overloads only.
+  // sse2neon typedefs __m128 / __m128d as float32x4_t / float64x2_t, exactly
+  // what the advsimd functions take, so vfloat4 and vdouble2 convert straight
+  // through. vdouble4 is x86-only, so vdouble2 is the only double width here.
   ESIMD_TRIG_DEFS(vfloat4, f4, advsimd)
   ESIMD_TRIG_FAST_DEFS(vfloat4, f4, advsimd)
+  ESIMD_TRIG_DEFS(vdouble2, d2, advsimd)
 
 #if defined(__AVX__) // NEON2X: avx2neon makes __m256 a { __m128 lo, hi; } pair.
 #define ESIMD_TRIG_PAIR_1(NAME, SLEEFNAME)                                                   \
@@ -196,6 +198,7 @@ namespace esimd
 
   ESIMD_TRIG_DEFS(vfloat4, f4, avx2128)
   ESIMD_TRIG_FAST_DEFS(vfloat4, f4, avx2128)
+  ESIMD_TRIG_DEFS(vdouble2, d2, avx2128)
   ESIMD_TRIG_DEFS(vfloat8, f8, avx2)
   ESIMD_TRIG_FAST_DEFS(vfloat8, f8, avx2)
 #if defined(__X86_64__) // vdouble4 is gated the same way in avx.h
