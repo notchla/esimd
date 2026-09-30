@@ -342,6 +342,20 @@ namespace esimd
   __forceinline vdouble8 reverse(const vdouble8& a) {
     return permute(a, vllong8(reverse_step));
   }
+
+  // x = {x0,...,x7}; reads 16 doubles, no alignment required.
+  __forceinline void deinterleave(const double* xy, vdouble8& x, vdouble8& y) {
+    const __m512d a = _mm512_loadu_pd(xy), b = _mm512_loadu_pd(xy + 8);
+    x = _mm512_permutex2var_pd(a, _mm512_set_epi64(14, 12, 10, 8, 6, 4, 2, 0), b);
+    y = _mm512_permutex2var_pd(a, _mm512_set_epi64(15, 13, 11, 9, 7, 5, 3, 1), b);
+  }
+
+  // x = {x0,x4,x1,x5,x2,x6,x3,x7}; in-lane unpacks, lower latency than deinterleave.
+  __forceinline void deinterleave_unordered(const double* xy, vdouble8& x, vdouble8& y) {
+    const __m512d a = _mm512_loadu_pd(xy), b = _mm512_loadu_pd(xy + 8);
+    x = _mm512_unpacklo_pd(a, b);
+    y = _mm512_unpackhi_pd(a, b);
+  }
 }
 
 #undef vboolf

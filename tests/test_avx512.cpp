@@ -208,6 +208,22 @@ TEST(vdouble8, arithmetic_fma_compare_reduce) {
   EXPECT_DOUBLE_EQ(toScalar(a + vdouble8(3.0)), 3.0);
 }
 
+TEST(vdouble8, deinterleave) {
+  double buf[17];
+  buf[0] = -1.0;
+  for (int k = 0; k < 8; ++k) {
+    buf[1 + 2 * k] = k;
+    buf[2 + 2 * k] = 10.0 + k;
+  }
+  vdouble8 x, y;
+  deinterleave(buf + 1, x, y);
+  expect_eq(x, {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0});
+  expect_eq(y, {10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0});
+  deinterleave_unordered(buf + 1, x, y);
+  expect_eq(x, {0.0, 4.0, 1.0, 5.0, 2.0, 6.0, 3.0, 7.0});
+  expect_eq(y, {10.0, 14.0, 11.0, 15.0, 12.0, 16.0, 13.0, 17.0});
+}
+
 TEST(vllong8, arithmetic_native_mul_compare_reduce) {
   const vllong8 a(esimd::step);        // 0..7
   const vllong8 one(1ll);

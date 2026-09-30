@@ -283,6 +283,17 @@ TEST(vdouble4, fma_compare_select_reduce) {
   EXPECT_DOUBLE_EQ(reduce_add(v), 10.0);
   EXPECT_DOUBLE_EQ(reduce_min(v), 1.0);
   EXPECT_DOUBLE_EQ(reduce_max(v), 4.0);
+}
+
+TEST(vdouble4, deinterleave) {
+  const double buf[9] = {-1.0, 0.0, 10.0, 1.0, 11.0, 2.0, 12.0, 3.0, 13.0};
+  vdouble4 x, y;
+  deinterleave(buf + 1, x, y);
+  expect_eq(x, {0.0, 1.0, 2.0, 3.0});
+  expect_eq(y, {10.0, 11.0, 12.0, 13.0});
+  deinterleave_unordered(buf + 1, x, y);
+  expect_eq(x, {0.0, 2.0, 1.0, 3.0});
+  expect_eq(y, {10.0, 12.0, 11.0, 13.0});
   EXPECT_DOUBLE_EQ(toScalar(vdouble4(9.0, 0.0, 0.0, 0.0)), 9.0);
 }
 

@@ -321,6 +321,21 @@ namespace esimd
   ////////////////////////////////////////////////////////////////////////////////
   /// Memory load and store operations
   ////////////////////////////////////////////////////////////////////////////////
+
+  // x = {x0,x1,x2,x3}; reads 8 doubles, no alignment required.
+  __forceinline void deinterleave(const double* xy, vdouble4& x, vdouble4& y) {
+    const __m256d a = _mm256_loadu_pd(xy), b = _mm256_loadu_pd(xy + 4);
+    const __m256d lo = _mm256_permute2f128_pd(a, b, 0x20), hi = _mm256_permute2f128_pd(a, b, 0x31);
+    x = _mm256_unpacklo_pd(lo, hi);
+    y = _mm256_unpackhi_pd(lo, hi);
+  }
+
+  // x = {x0,x2,x1,x3}; two fewer cross-lane shuffles than deinterleave.
+  __forceinline void deinterleave_unordered(const double* xy, vdouble4& x, vdouble4& y) {
+    const __m256d a = _mm256_loadu_pd(xy), b = _mm256_loadu_pd(xy + 4);
+    x = _mm256_unpacklo_pd(a, b);
+    y = _mm256_unpackhi_pd(a, b);
+  }
 }
 
 #undef vboolf
