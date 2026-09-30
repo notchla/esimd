@@ -1,12 +1,14 @@
 // Copyright 2009-2021 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 //
-// Correctness tests for the SSE (128-bit, 4-wide) esimd types: vboolf4, vint4,
-// vuint4, vfloat4. Each operation is checked element-by-element against a plain
-// scalar reference. Compiled with SSE4.2 flags (see tests/CMakeLists.txt).
+// Correctness tests for the SSE (128-bit) esimd types: vboolf4, vint4, vuint4,
+// vfloat4 and the 2-wide 64-bit vboold2, vdouble2, vllong2. Each operation is
+// checked element-by-element against a plain scalar reference. Also compiled
+// with AVX2 and AVX512 flags, which switch these headers to wider-ISA encodings
+// (see tests/CMakeLists.txt).
 
-#include <esimd/sse.h>
 #include "test_helpers.h"
+#include <esimd/sse.h>
 
 using namespace esimd;
 using namespace esimd_test;
@@ -16,10 +18,10 @@ using namespace esimd_test;
 ////////////////////////////////////////////////////////////////////////////////
 
 TEST(vboolf4, constructors_and_constants) {
-  expect_mask(vboolf4(true),  {true, true, true, true});
+  expect_mask(vboolf4(true), {true, true, true, true});
   expect_mask(vboolf4(false), {false, false, false, false});
   expect_mask(vboolf4(true, false, true, false), {true, false, true, false});
-  expect_mask(vboolf4(esimd::True),  {true, true, true, true});
+  expect_mask(vboolf4(esimd::True), {true, true, true, true});
   expect_mask(vboolf4(esimd::False), {false, false, false, false});
   expect_mask(vboolf4(0x5 /*0b0101*/), {true, false, true, false});
 }
@@ -30,7 +32,7 @@ TEST(vboolf4, logical_ops) {
   expect_mask(a & b, {true, false, false, false});
   expect_mask(a | b, {true, true, true, false});
   expect_mask(a ^ b, {false, true, true, false});
-  expect_mask(!a,    {false, false, true, true});
+  expect_mask(!a, {false, false, true, true});
   expect_mask(andn(a, b), {false, true, false, false}); // a & !b
 }
 
@@ -39,20 +41,23 @@ TEST(vboolf4, compare_and_select) {
   const vboolf4 b(true, false, true, false);
   expect_mask(a == b, {true, false, false, true});
   expect_mask(a != b, {false, true, true, false});
-  expect_mask(select(vboolf4(true,false,true,false), a, b), {true, false, false, false});
+  expect_mask(select(vboolf4(true, false, true, false), a, b),
+              {true, false, false, false});
 }
 
 TEST(vboolf4, reductions) {
-  EXPECT_TRUE (all(vboolf4(true)));
+  EXPECT_TRUE(all(vboolf4(true)));
   EXPECT_FALSE(all(vboolf4(true, true, true, false)));
-  EXPECT_TRUE (any(vboolf4(false, false, true, false)));
+  EXPECT_TRUE(any(vboolf4(false, false, true, false)));
   EXPECT_FALSE(any(vboolf4(false)));
-  EXPECT_TRUE (none(vboolf4(false)));
+  EXPECT_TRUE(none(vboolf4(false)));
   EXPECT_EQ(movemask(vboolf4(true, false, true, false)), size_t(0x5));
   EXPECT_EQ(popcnt(vboolf4(true, false, true, true)), size_t(3));
-  EXPECT_TRUE (reduce_and(vboolf4(true)));
+#if !defined(__AVX512VL__) // the __mmask vbool types have no reduce_and/or
+  EXPECT_TRUE(reduce_and(vboolf4(true)));
   EXPECT_FALSE(reduce_and(vboolf4(true, true, false, true)));
-  EXPECT_TRUE (reduce_or(vboolf4(false, false, true, false)));
+  EXPECT_TRUE(reduce_or(vboolf4(false, false, true, false)));
+#endif
 }
 
 TEST(vboolf4, get_set_clear) {
@@ -75,11 +80,12 @@ TEST(vint4, constructors_and_load_store) {
   expect_eq(vint4(esimd::step), {0, 1, 2, 3});
 
   alignas(16) int mem[4] = {5, 6, 7, 8};
-  expect_eq(vint4::load(mem),  {5, 6, 7, 8});
+  expect_eq(vint4::load(mem), {5, 6, 7, 8});
   expect_eq(vint4::loadu(mem), {5, 6, 7, 8});
   alignas(16) int out[4] = {0, 0, 0, 0};
   vint4::store(out, vint4(1, 2, 3, 4));
-  EXPECT_EQ(out[0], 1); EXPECT_EQ(out[3], 4);
+  EXPECT_EQ(out[0], 1);
+  EXPECT_EQ(out[3], 4);
 }
 
 TEST(vint4, arithmetic) {
@@ -107,9 +113,9 @@ TEST(vint4, compare) {
   const vint4 a(1, 2, 3, 4), b(4, 3, 2, 1);
   expect_mask(a == vint4(1, 9, 3, 9), {true, false, true, false});
   expect_mask(a != b, {true, true, true, true});
-  expect_mask(a < b,  {true, true, false, false});
+  expect_mask(a < b, {true, true, false, false});
   expect_mask(a <= vint4(1, 2, 2, 2), {true, true, false, false});
-  expect_mask(a > b,  {false, false, true, true});
+  expect_mask(a > b, {false, false, true, true});
   expect_mask(a >= vint4(2, 2, 2, 2), {false, true, true, true});
 }
 
@@ -154,13 +160,14 @@ TEST(vuint4, arithmetic_bitwise_shift) {
 }
 
 TEST(vuint4, compare_select_movement) {
-  // Note: vuint4 intentionally omits *, ordered compares, min/max and reductions
-  // in the SSE backend (only == / != are provided).
+  // Note: vuint4 intentionally omits *, ordered compares, min/max and
+  // reductions in the SSE backend (only == / != are provided).
   const vuint4 a(1u, 5u, 3u, 8u), b(4u, 2u, 6u, 7u);
   expect_mask(a == vuint4(1u, 9u, 3u, 9u), {true, false, true, false});
   expect_mask(a != b, {true, true, true, true});
   expect_eq(select(vboolf4(true, false, true, false), a, b), {1u, 2u, 3u, 7u});
-  expect_eq(unpacklo(vuint4(1u, 2u, 3u, 4u), vuint4(5u, 6u, 7u, 8u)), {1u, 5u, 2u, 6u});
+  expect_eq(unpacklo(vuint4(1u, 2u, 3u, 4u), vuint4(5u, 6u, 7u, 8u)),
+            {1u, 5u, 2u, 6u});
   expect_eq(shuffle<1, 0, 3, 2>(vuint4(1u, 2u, 3u, 4u)), {2u, 1u, 4u, 3u});
   EXPECT_EQ(toScalar(vuint4(9u, 0u, 0u, 0u)), 9u);
 }
@@ -173,14 +180,15 @@ TEST(vfloat4, constructors_and_constants) {
   expect_eq(vfloat4(2.5f), {2.5f, 2.5f, 2.5f, 2.5f});
   expect_eq(vfloat4(1.f, 2.f, 3.f, 4.f), {1.f, 2.f, 3.f, 4.f});
   expect_eq(vfloat4(esimd::zero), {0.f, 0.f, 0.f, 0.f});
-  expect_eq(vfloat4(esimd::one),  {1.f, 1.f, 1.f, 1.f});
+  expect_eq(vfloat4(esimd::one), {1.f, 1.f, 1.f, 1.f});
   expect_eq(vfloat4(esimd::step), {0.f, 1.f, 2.f, 3.f});
-  expect_eq(vfloat4(vint4(1, 2, 3, 4)), {1.f, 2.f, 3.f, 4.f}); // int -> float cast
+  expect_eq(vfloat4(vint4(1, 2, 3, 4)),
+            {1.f, 2.f, 3.f, 4.f}); // int -> float cast
 }
 
 TEST(vfloat4, load_store) {
   alignas(16) float mem[4] = {5.f, 6.f, 7.f, 8.f};
-  expect_eq(vfloat4::load(mem),  {5.f, 6.f, 7.f, 8.f});
+  expect_eq(vfloat4::load(mem), {5.f, 6.f, 7.f, 8.f});
   expect_eq(vfloat4::loadu(mem), {5.f, 6.f, 7.f, 8.f});
   alignas(16) float out[4] = {};
   vfloat4::store(out, vfloat4(1.f, 2.f, 3.f, 4.f));
@@ -193,8 +201,10 @@ TEST(vfloat4, unary) {
   expect_eq(sign(vfloat4(-2.f, 3.f, -4.f, 5.f)), {-1.f, 1.f, -1.f, 1.f});
   expect_eq(sqr(vfloat4(1.f, 2.f, 3.f, 4.f)), {1.f, 4.f, 9.f, 16.f});
   expect_eq(sqrt(vfloat4(1.f, 4.f, 9.f, 16.f)), {1.f, 2.f, 3.f, 4.f});
-  expect_near(rcp(vfloat4(1.f, 2.f, 4.f, 8.f)),   {1.f, 0.5f, 0.25f, 0.125f}, 1e-4f);
-  expect_near(rsqrt(vfloat4(1.f, 4.f, 16.f, 64.f)), {1.f, 0.5f, 0.25f, 0.125f}, 1e-3f);
+  expect_near(rcp(vfloat4(1.f, 2.f, 4.f, 8.f)), {1.f, 0.5f, 0.25f, 0.125f},
+              1e-4f);
+  expect_near(rsqrt(vfloat4(1.f, 4.f, 16.f, 64.f)), {1.f, 0.5f, 0.25f, 0.125f},
+              1e-3f);
 }
 
 TEST(vfloat4, binary) {
@@ -202,15 +212,16 @@ TEST(vfloat4, binary) {
   expect_eq(a + b, {5.f, 5.f, 5.f, 5.f});
   expect_eq(a - b, {-3.f, -1.f, 1.f, 3.f});
   expect_eq(a * b, {4.f, 6.f, 6.f, 4.f});
-  expect_near(a / b, {0.25f, 2.f/3.f, 1.5f, 4.f}, 1e-5f);
+  expect_near(a / b, {0.25f, 2.f / 3.f, 1.5f, 4.f}, 1e-5f);
   expect_eq(min(a, b), {1.f, 2.f, 2.f, 1.f});
   expect_eq(max(a, b), {4.f, 3.f, 3.f, 4.f});
 }
 
 TEST(vfloat4, ternary_fma) {
-  const vfloat4 a(1.f, 2.f, 3.f, 4.f), b(2.f, 2.f, 2.f, 2.f), c(1.f, 1.f, 1.f, 1.f);
-  expect_eq(madd (a, b, c), {3.f, 5.f, 7.f, 9.f});   //  a*b+c
-  expect_eq(msub (a, b, c), {1.f, 3.f, 5.f, 7.f});   //  a*b-c
+  const vfloat4 a(1.f, 2.f, 3.f, 4.f), b(2.f, 2.f, 2.f, 2.f),
+      c(1.f, 1.f, 1.f, 1.f);
+  expect_eq(madd(a, b, c), {3.f, 5.f, 7.f, 9.f});      //  a*b+c
+  expect_eq(msub(a, b, c), {1.f, 3.f, 5.f, 7.f});      //  a*b-c
   expect_eq(nmadd(a, b, c), {-1.f, -3.f, -5.f, -7.f}); // -a*b+c
   expect_eq(nmsub(a, b, c), {-3.f, -5.f, -7.f, -9.f}); // -a*b-c
 }
@@ -218,21 +229,23 @@ TEST(vfloat4, ternary_fma) {
 TEST(vfloat4, compare_and_select) {
   const vfloat4 a(1.f, 2.f, 3.f, 4.f), b(4.f, 2.f, 2.f, 1.f);
   expect_mask(a == b, {false, true, false, false});
-  expect_mask(a <  b, {true, false, false, false});
+  expect_mask(a < b, {true, false, false, false});
   expect_mask(a >= b, {false, true, true, true});
-  expect_eq(select(vboolf4(true, false, true, false), a, b), {1.f, 2.f, 3.f, 1.f});
+  expect_eq(select(vboolf4(true, false, true, false), a, b),
+            {1.f, 2.f, 3.f, 1.f});
 }
 
 TEST(vfloat4, rounding) {
   const vfloat4 v(1.4f, 1.6f, -1.4f, -1.6f);
   expect_eq(floor(v), {1.f, 1.f, -2.f, -2.f});
-  expect_eq(ceil(v),  {2.f, 2.f, -1.f, -1.f});
+  expect_eq(ceil(v), {2.f, 2.f, -1.f, -1.f});
   expect_eq(trunc(v), {1.f, 1.f, -1.f, -1.f});
   expect_eq(round(v), {1.f, 2.f, -1.f, -2.f});
 }
 
 TEST(vfloat4, movement_and_reductions) {
-  expect_eq(unpacklo(vfloat4(1, 2, 3, 4), vfloat4(5, 6, 7, 8)), {1.f, 5.f, 2.f, 6.f});
+  expect_eq(unpacklo(vfloat4(1, 2, 3, 4), vfloat4(5, 6, 7, 8)),
+            {1.f, 5.f, 2.f, 6.f});
   expect_eq(shuffle<1, 0, 3, 2>(vfloat4(1, 2, 3, 4)), {2.f, 1.f, 4.f, 3.f});
   const vfloat4 v(3.f, 1.f, 4.f, 2.f);
   EXPECT_FLOAT_EQ(reduce_add(v), 10.f);
@@ -243,4 +256,148 @@ TEST(vfloat4, movement_and_reductions) {
 
 TEST(vfloat4, isnan) {
   expect_mask(isnan(vfloat4(1.f, NAN, 3.f, NAN)), {false, true, false, true});
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// vboold2 / vdouble2 / vllong2  (128-bit, 2-wide 64-bit)
+////////////////////////////////////////////////////////////////////////////////
+
+TEST(vboold2, construct_logical_reduce) {
+  expect_mask(vboold2(esimd::True), {true, true});
+  expect_mask(vboold2(esimd::False), {false, false});
+  expect_mask(vboold2(0x1), {true, false});
+  expect_mask(vboold2(0x2), {false, true});
+  const vboold2 a(0x3), b(0x2);
+  expect_mask(a & b, {false, true});
+  expect_mask(a ^ b, {true, false});
+  expect_mask(vboold2(0x1) | b, {true, true});
+  expect_mask(!b, {true, false});
+  expect_mask(andn(a, b), {true, false});
+  EXPECT_TRUE(all(vboold2(esimd::True)));
+  EXPECT_FALSE(all(vboold2(0x1)));
+  EXPECT_TRUE(any(vboold2(0x2)));
+  EXPECT_TRUE(none(vboold2(esimd::False)));
+  EXPECT_EQ(movemask(vboold2(0x2)), 0x2u);
+  EXPECT_EQ(popcnt(vboold2(0x3)), 2u);
+}
+
+TEST(vdouble2, constructors_and_arithmetic) {
+  expect_eq(vdouble2(2.5), {2.5, 2.5});
+  expect_eq(vdouble2(1.0, 2.0), {1.0, 2.0});
+  expect_eq(vdouble2(esimd::zero), {0.0, 0.0});
+  expect_eq(vdouble2(esimd::step), {0.0, 1.0});
+  expect_eq(vdouble2(esimd::reverse_step), {1.0, 0.0});
+  const vdouble2 a(1.0, 4.0), b(4.0, 2.0);
+  expect_eq(a + b, {5.0, 6.0});
+  expect_eq(a - b, {-3.0, 2.0});
+  expect_eq(a * b, {4.0, 8.0});
+  expect_eq(a / b, {0.25, 2.0});
+  expect_eq(12.0 / a, {12.0, 3.0});
+  expect_eq(-a, {-1.0, -4.0});
+  vdouble2 d = a;
+  d /= 2.0;
+  expect_eq(d, {0.5, 2.0});
+  expect_eq(sqrt(vdouble2(9.0, 16.0)), {3.0, 4.0});
+  expect_near(rsqrt(vdouble2(16.0, 64.0)), {0.25f, 0.125f}, 1e-7f);
+  expect_eq(min(a, b), {1.0, 2.0});
+  expect_eq(max(a, b), {4.0, 4.0});
+}
+
+TEST(vdouble2, load_store) {
+  alignas(16) const double mem[2] = {1.0, 2.0};
+  expect_eq(vdouble2::load(mem), {1.0, 2.0});
+  expect_eq(vdouble2::loadu(mem), {1.0, 2.0});
+  expect_eq(vdouble2::broadcast(mem + 1), {2.0, 2.0});
+  expect_eq(vdouble2::load(vboold2(0x1), mem), {1.0, 0.0});
+  expect_eq(vdouble2::loadu(vboold2(0x2), mem), {0.0, 2.0});
+  alignas(16) double out[2] = {-1.0, -1.0};
+  vdouble2::store(vboold2(0x2), out, vdouble2(5.0, 6.0));
+  EXPECT_DOUBLE_EQ(out[0], -1.0);
+  EXPECT_DOUBLE_EQ(out[1], 6.0);
+  vdouble2::storeu(vboold2(0x1), out, vdouble2(5.0, 6.0));
+  EXPECT_DOUBLE_EQ(out[0], 5.0);
+  EXPECT_DOUBLE_EQ(out[1], 6.0);
+}
+
+TEST(vdouble2, fma_compare_select_reduce) {
+  const vdouble2 a(1.0, 2.0), b(2.0, 2.0), c(1.0, 1.0);
+  expect_eq(madd(a, b, c), {3.0, 5.0});
+  expect_eq(msub(a, b, c), {1.0, 3.0});
+  expect_eq(nmadd(a, b, c), {-1.0, -3.0});
+  expect_eq(nmsub(a, b, c), {-3.0, -5.0});
+  const vdouble2 x(1.0, 2.0), y(4.0, 2.0);
+  expect_mask(x == y, {false, true});
+  expect_mask(x != y, {true, false});
+  expect_mask(x < y, {true, false});
+  expect_mask(x <= y, {true, true});
+  expect_mask(x > y, {false, false});
+  expect_mask(x >= y, {false, true});
+  expect_mask(lt(vboold2(0x2), x, y), {false, false});
+  expect_eq(select(vboold2(0x1), x, y), {1.0, 2.0});
+  expect_eq(select(vboold2(0x2), x, y), {4.0, 2.0});
+  const vdouble2 v(3.0, 1.0);
+  EXPECT_DOUBLE_EQ(reduce_add(v), 4.0);
+  EXPECT_DOUBLE_EQ(reduce_min(v), 1.0);
+  EXPECT_DOUBLE_EQ(reduce_max(v), 3.0);
+  expect_eq(shuffle<1, 0>(v), {1.0, 3.0});
+  EXPECT_DOUBLE_EQ(toScalar(v), 3.0);
+}
+
+TEST(vdouble2, deinterleave) {
+  const double buf[5] = {-1.0, 0.0, 10.0, 1.0, 11.0};
+  vdouble2 x, y;
+  deinterleave(buf + 1, x, y);
+  expect_eq(x, {0.0, 1.0});
+  expect_eq(y, {10.0, 11.0});
+  deinterleave_unordered(buf + 1, x, y);
+  expect_eq(x, {0.0, 1.0});
+  expect_eq(y, {10.0, 11.0});
+}
+
+TEST(vllong2, arithmetic_bitwise_shift) {
+  expect_eq(vllong2(7), {7LL, 7LL});
+  expect_eq(vllong2(esimd::step), {0LL, 1LL});
+  const vllong2 a(1LL << 40, -3), b(5, 2);
+  expect_eq(a + b, {(1LL << 40) + 5, -1LL});
+  expect_eq(a - b, {(1LL << 40) - 5, -5LL});
+  expect_eq(vllong2(3, -4) * vllong2(5, 6), {15LL, -24LL});
+  expect_eq(a & 0xff, {0LL, 0xfdLL});
+  expect_eq(vllong2(0x1, 0x2) | vllong2(0x4, 0x8), {0x5LL, 0xaLL});
+  expect_eq(vllong2(1, 2) << 33, {1LL << 33, 1LL << 34});
+  expect_eq(srl(vllong2(-1, 8), 60), {0xfLL, 0LL});
+#if defined(ESIMD_ARM64) || defined(__AVX2__)
+  expect_eq(vllong2(1, 1) << vllong2(3, 40), {8LL, 1LL << 40});
+#endif
+  alignas(16) long long out[2];
+  vllong2::store(out, a);
+  EXPECT_EQ(out[0], 1LL << 40);
+  EXPECT_EQ(out[1], -3LL);
+  expect_eq(vllong2::loadu(out), {1LL << 40, -3LL});
+  vllong2::store(vboold2(0x2), out, vllong2(5, 6));
+  EXPECT_EQ(out[0], 1LL << 40);
+  EXPECT_EQ(out[1], 6LL);
+  vllong2::storeu(vboold2(0x1), out, vllong2(5, 6));
+  EXPECT_EQ(out[0], 5LL);
+  EXPECT_EQ(out[1], 6LL);
+}
+
+TEST(vllong2, compare_select_reduce) {
+  const vllong2 a(1LL << 40, -3), b(1LL << 40, 2);
+  expect_mask(a == b, {true, false});
+  expect_mask(a != b, {false, true});
+  expect_mask(a < b, {false, true});
+  expect_mask(a > b, {false, false});
+  expect_mask(a >= b, {true, false});
+  expect_mask(a <= b, {true, true});
+  expect_eq(select(vboold2(0x2), a, vllong2(9)), {9LL, -3LL});
+  EXPECT_EQ(reduce_add(vllong2(5, 7)), 12LL);
+  EXPECT_EQ(reduce_or(vllong2(1, 4)), 5LL);
+  EXPECT_EQ(reduce_and(vllong2(3, 6)), 2LL);
+  EXPECT_EQ(toScalar(vllong2(9, 0)), 9LL);
+}
+
+TEST(vdouble2, bit_casts) {
+  const vllong2 bits = asLLong(vdouble2(1.0, -0.0));
+  expect_eq(bits, {0x3ff0000000000000LL, (long long)0x8000000000000000ULL});
+  expect_eq(asDouble(bits), {1.0, -0.0});
 }

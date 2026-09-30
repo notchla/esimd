@@ -57,3 +57,13 @@ namespace esimd
 #include "vint4_sse2.h"
 #include "vuint4_sse2.h"
 #include "vfloat4_sse2.h"
+
+#if defined(__AVX512VL__)
+#include "vboold2_avx512.h"
+#else
+#include "vboold2_sse2.h"
+#endif
+#if defined(__64BIT__)
+#include "vllong2_sse2.h"
+#endif
+#include "vdouble2_sse2.h"

@@ -56,15 +56,21 @@ namespace esimd
 #if defined(__AVX512VL__) // SKX
   const int VSIZEX = 8;  // default size
   const int VSIZEL = 16; // large size
-  const int VSIZEXD = 8;
 #elif defined(__AVX__)
   const int VSIZEX = 8;
   const int VSIZEL = 8;
-  const int VSIZEXD = 4;
 #else
   const int VSIZEX = 4;
   const int VSIZEL = 4;
+#endif
+
+  /* vdouble4 is x86-only, so NEON2X falls back to vdouble2 despite __AVX__ */
+#if defined(__AVX512VL__)
+  const int VSIZEXD = 8;
+#elif defined(__AVX__) && defined(__X86_64__)
   const int VSIZEXD = 4;
+#else
+  const int VSIZEXD = 2;
 #endif
 
   template<int N>
@@ -101,6 +107,11 @@ namespace esimd
   template<int N> using vreal = typename vtypes<N>::vfloat;
   template<int N> using vfloat = typename vtypes<N>::vfloat;
   template<int N> using vdouble = typename vtypes<N>::vdouble;
+
+  /* 2-wide shortcuts, 64-bit types only */
+  typedef vdouble<2> vdouble2;
+  typedef vllong<2>  vllong2;
+  typedef vboold<2>  vboold2;
 
   /* 4-wide shortcuts */
   typedef vfloat<4>  vfloat4;

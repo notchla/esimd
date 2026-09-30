@@ -150,8 +150,8 @@ namespace esimd
 #if defined(ESIMD_ARM64)
 
   // sse2neon typedefs __m128 as float32x4_t, which is exactly what the advsimd
-  // functions take, so vfloat4 converts straight through. There is no vdouble2
-  // in esimd (and vdouble4 is x86-only), so ARM gets float overloads only.
+  // functions take, so vfloat4 converts straight through. vdouble2 has no trig
+  // overloads yet (and vdouble4 is x86-only), so ARM gets float overloads only.
   ESIMD_TRIG_DEFS(vfloat4, f4, advsimd)
   ESIMD_TRIG_FAST_DEFS(vfloat4, f4, advsimd)
 

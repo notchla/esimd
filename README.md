@@ -20,12 +20,12 @@ License 1.0, and are used only by the optional `<esimd/trig.h>` layer.
 
 | ISA      | Arch    | Width      | Backend                                        |
 |----------|---------|------------|------------------------------------------------|
-| `SSE42`  | x86     | 4          | native SSE4.2                                  |
-| `AVX`    | x86     | 4, 8       | native AVX                                     |
-| `AVX2`   | x86     | 4, 8       | native AVX2                                    |
-| `AVX512` | x86     | 4, 8, 16   | native AVX-512                                 |
-| `NEON`   | AArch64 | 4          | `sse2neon.h` — real NEON behind `__m128`       |
-| `NEON2X` | AArch64 | 4, 8       | `avx2neon.h` — `__m256` as a pair of `__m128`  |
+| `SSE42`  | x86     | 2, 4       | native SSE4.2                                  |
+| `AVX`    | x86     | 2, 4, 8    | native AVX                                     |
+| `AVX2`   | x86     | 2, 4, 8    | native AVX2                                    |
+| `AVX512` | x86     | 2, 4, 8, 16| native AVX-512                                 |
+| `NEON`   | AArch64 | 2, 4       | `sse2neon.h` — real NEON behind `__m128`       |
+| `NEON2X` | AArch64 | 2, 4, 8    | `avx2neon.h` — `__m256` as a pair of `__m128`  |
 
 On ARM there are **no `-m` codegen flags**: NEON is baseline on AArch64, so the `-D`
 defines alone select the backend, and the x86 intrinsics they name are supplied by
@@ -43,7 +43,8 @@ A few operations have no ARM implementation upstream and are therefore absent un
   `shuffle<0,0,2,2>` / `<1,1,3,3>` / `<0,1,0,1>` specializations, and the
   `vreduce_*2`/`*4` staged reductions
 - `vint8` / `vuint8`: `permute`, `align_shift_right`
-- `vllong4`, `vdouble4`: absent entirely
+- `vllong4`, `vdouble4`: absent entirely; `vdouble2` / `vllong2` / `vboold2` are the
+  64-bit types on ARM, and `VSIZEXD` is 2 there, NEON2X included
 
 > **GCC note:** the ARM flag sets include `-flax-vector-conversions`. `avx2neon.h`
 > assigns freely between same-width NEON vector types; Clang permits that by default, GCC needs the flag.
@@ -86,7 +87,7 @@ vfloat8 sn, cs; sincos(x, sn, cs);   // one shared range reduction
 `sin cos tan sincos asin acos atan atan2`, each in three flavours: the plain name
 (SLEEF `u10`), a `_u35` suffix (SLEEF `u35`), and `fast_sin` / `fast_cos` (SLEEF
 `u3500`, single precision only — SLEEF has no `fasttan` and no double `u3500`).
-Overloads exist for every `vfloat`/`vdouble` width the active ISA defines.
+Overloads exist for every `vfloat`/`vdouble` width the active ISA defines, except `vdouble2`.
 
 > **Every translation unit including `<esimd/trig.h>` must be compiled with
 > `-ffp-contract=off`.** SLEEF's double-double sequences reconstruct the rounding

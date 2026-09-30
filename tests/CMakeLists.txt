@@ -10,6 +10,18 @@ esimd_add_isa_target(esimd_test_sse42 SSE42
   LINKS   GTest::gtest_main
   LABELS  sse)
 
+# The SSE headers pick AVX / AVX512VL instructions when those are enabled, so
+# the same suite is rebuilt at AVX2 and AVX512 to cover those branches.
+esimd_add_isa_target(esimd_test_sse_avx2 AVX2
+  SOURCES test_sse.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx2)
+
+esimd_add_isa_target(esimd_test_sse_avx512 AVX512
+  SOURCES test_sse.cpp
+  LINKS   GTest::gtest_main
+  LABELS  avx512)
+
 esimd_add_isa_target(esimd_test_avx AVX
   SOURCES test_avx.cpp
   LINKS   GTest::gtest_main

@@ -147,18 +147,17 @@ TEST(esimd_integration, default_width_aliases) {
   EXPECT_TRUE(all(vboolx(True)));
 }
 
-// vdouble<4> only has a SIMD backend on x86 AVX; elsewhere it is the plain array struct.
-#if defined(__AVX__) && defined(__X86_64__)
 TEST(esimd_integration, double_width_aliases) {
 #if defined(__AVX512VL__)
   EXPECT_EQ(VSIZEXD, 8);
-#else
+#elif defined(__AVX__) && defined(__X86_64__)
   EXPECT_EQ(VSIZEXD, 4);
+#else
+  EXPECT_EQ(VSIZEXD, 2);
 #endif
   alignas(64) double buf[VSIZEXD];
   for (int i = 0; i < VSIZEXD; ++i) buf[i] = double(i);
   const vdoublexd d = vdoublexd::loadu(buf);
-  const vbooldxd lt = d < 2.0;
-  for (int i = 0; i < VSIZEXD; ++i) EXPECT_EQ(bool(lt[i]), i < 2) << "lane " << i;
+  const vbooldxd lt = d < 1.0;
+  for (int i = 0; i < VSIZEXD; ++i) EXPECT_EQ(bool(lt[i]), i < 1) << "lane " << i;
 }
-#endif

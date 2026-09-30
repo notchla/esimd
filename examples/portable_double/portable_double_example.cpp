@@ -7,10 +7,8 @@
 // AVX/AVX2 is 8 lanes — wider than any AVX double register, so it has no SIMD
 // backend there. VSIZEXD is the native double width instead:
 //
-//   VSIZEXD    4 under AVX/AVX2, 8 under AVX512
+//   VSIZEXD    2 under SSE/NEON/NEON2X, 4 under AVX/AVX2, 8 under AVX512
 //   vdoublexd = vdouble<VSIZEXD>   vbooldxd = vboold<VSIZEXD>
-//
-// Built for x86 AVX, AVX2 and AVX512 only: SSE and NEON have no SIMD double type yet.
 //
 // Build standalone for, say, AVX2 (from this folder):
 //
@@ -61,8 +59,8 @@ int main() {
   for (int i = 0; i < VSIZEXD; ++i) std::cout << (i ? ", " : "") << bool(low[i]);
   std::cout << "]\n";
 
-  // 10 is not a multiple of 4 or 8, so the masked tail always runs.
-  const int N = 10;
+  // 11 is not a multiple of 2, 4 or 8, so the masked tail always runs.
+  const int N = 11;
   std::vector<double> x(N), b(N), y(N, -1.0);
   for (int i = 0; i < N; ++i) { x[i] = double(i); b[i] = double(100 + i); }
 

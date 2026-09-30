@@ -20,6 +20,11 @@ __forceinline __m128 _mm_fnmadd_ps(__m128 a, __m128 b, __m128 c) { return vfmsq_
 __forceinline __m128 _mm_fnmsub_ps(__m128 a, __m128 b, __m128 c) { return vnegq_f32(vfmaq_f32(c, a, b)); }
 __forceinline __m128 _mm_fmsub_ps (__m128 a, __m128 b, __m128 c) { return vnegq_f32(vfmsq_f32(c, a, b)); }
 
+__forceinline __m128d _mm_fmadd_pd (__m128d a, __m128d b, __m128d c) { return vfmaq_f64(c, a, b); }
+__forceinline __m128d _mm_fnmadd_pd(__m128d a, __m128d b, __m128d c) { return vfmsq_f64(c, a, b); }
+__forceinline __m128d _mm_fnmsub_pd(__m128d a, __m128d b, __m128d c) { return vnegq_f64(vfmaq_f64(c, a, b)); }
+__forceinline __m128d _mm_fmsub_pd (__m128d a, __m128d b, __m128d c) { return vnegq_f64(vfmsq_f64(c, a, b)); }
+
 __forceinline __m128 _mm_broadcast_ss (float const * mem_addr)
 {
     return vdupq_n_f32(*mem_addr);
