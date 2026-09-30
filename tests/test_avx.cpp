@@ -258,6 +258,13 @@ TEST(vdouble4, constructors_and_arithmetic) {
   expect_eq(a + b, {5.0, 5.0, 5.0, 5.0});
   expect_eq(a - b, {-3.0, -1.0, 1.0, 3.0});
   expect_eq(a * b, {4.0, 6.0, 6.0, 4.0});
+  expect_eq(a / b, {0.25, 2.0 / 3.0, 1.5, 4.0});
+  expect_eq(a / 2.0, {0.5, 1.0, 1.5, 2.0});
+  expect_eq(12.0 / a, {12.0, 6.0, 4.0, 3.0});
+  vdouble4 d = a; d /= 2.0;
+  expect_eq(d, {0.5, 1.0, 1.5, 2.0});
+  expect_eq(sqrt(vdouble4(1.0, 4.0, 9.0, 16.0)), {1.0, 2.0, 3.0, 4.0});
+  expect_near(rsqrt(vdouble4(1.0, 4.0, 16.0, 64.0)), {1.f, 0.5f, 0.25f, 0.125f}, 1e-7f);
   expect_eq(min(a, b), {1.0, 2.0, 2.0, 1.0});
   expect_eq(max(a, b), {4.0, 3.0, 3.0, 4.0});
 }

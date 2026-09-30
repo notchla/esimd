@@ -189,6 +189,14 @@ TEST(vdouble8, arithmetic_fma_compare_reduce) {
   const vdouble8 b(2.0), c(1.0);
   expect_eq(a + b, {2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0});
   expect_eq(a * b, {0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0});
+  expect_eq(a / b, {0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5});
+  expect_eq(a / 2.0, {0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5});
+  expect_eq(8.0 / (a + c), {8.0, 4.0, 8.0 / 3.0, 2.0, 1.6, 8.0 / 6.0, 8.0 / 7.0, 1.0});
+  vdouble8 d = a; d /= b;
+  expect_eq(d, {0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5});
+  expect_eq(sqrt(a * a), {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0});
+  expect_near(rsqrt(vdouble8(1.0, 4.0, 16.0, 64.0, 256.0, 1024.0, 4096.0, 16384.0)),
+              {1.f, 0.5f, 0.25f, 0.125f, 0.0625f, 0.03125f, 0.015625f, 0.0078125f}, 1e-7f);
   expect_eq(madd(a, b, c), {1.0, 3.0, 5.0, 7.0, 9.0, 11.0, 13.0, 15.0});
   expect_eq(min(a, vdouble8(4.0)), {0.0, 1.0, 2.0, 3.0, 4.0, 4.0, 4.0, 4.0});
   expect_mask(a < vdouble8(4.0), {true, true, true, true, false, false, false, false});

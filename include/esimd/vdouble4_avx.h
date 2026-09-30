@@ -105,6 +105,17 @@ namespace esimd
 
   __forceinline vdouble4 operator +(const vdouble4& a) { return a; }
   __forceinline vdouble4 operator -(const vdouble4& a) { return _mm256_sub_pd(_mm256_setzero_pd(), a); }
+  __forceinline vdouble4 sqrt (const vdouble4& a) { return _mm256_sqrt_pd(a); }
+  __forceinline vdouble4 rsqrt(const vdouble4& a)
+  {
+#if defined(__AVX512VL__)
+    const vdouble4 r = _mm256_rsqrt14_pd(a);
+    return _mm256_fmadd_pd(_mm256_set1_pd(1.5), r,
+                           _mm256_mul_pd(_mm256_mul_pd(_mm256_mul_pd(a, _mm256_set1_pd(-0.5)), r), _mm256_mul_pd(r, r)));
+#else
+    return _mm256_div_pd(_mm256_set1_pd(1.0), _mm256_sqrt_pd(a));
+#endif
+  }
 
   ////////////////////////////////////////////////////////////////////////////////
   /// Binary Operators
@@ -121,6 +132,10 @@ namespace esimd
   __forceinline vdouble4 operator *(const vdouble4& a, const vdouble4& b) { return _mm256_mul_pd(a, b); }
   __forceinline vdouble4 operator *(const vdouble4& a, double          b) { return a * vdouble4(b); }
   __forceinline vdouble4 operator *(double          a, const vdouble4& b) { return vdouble4(a) * b; }
+
+  __forceinline vdouble4 operator /(const vdouble4& a, const vdouble4& b) { return _mm256_div_pd(a, b); }
+  __forceinline vdouble4 operator /(const vdouble4& a, double          b) { return a / vdouble4(b); }
+  __forceinline vdouble4 operator /(double          a, const vdouble4& b) { return vdouble4(a) / b; }
 
   __forceinline vdouble4 operator &(const vdouble4& a, const vdouble4& b) { return _mm256_and_pd(a, b); }
   __forceinline vdouble4 operator &(const vdouble4& a, double          b) { return a & vdouble4(b); }
@@ -170,6 +185,9 @@ namespace esimd
 
   __forceinline vdouble4& operator *=(vdouble4& a, const vdouble4& b) { return a = a * b; }
   __forceinline vdouble4& operator *=(vdouble4& a, double          b) { return a = a * b; }
+
+  __forceinline vdouble4& operator /=(vdouble4& a, const vdouble4& b) { return a = a / b; }
+  __forceinline vdouble4& operator /=(vdouble4& a, double          b) { return a = a / b; }
   
   __forceinline vdouble4& operator &=(vdouble4& a, const vdouble4& b) { return a = a & b; }
   __forceinline vdouble4& operator &=(vdouble4& a, double          b) { return a = a & b; }

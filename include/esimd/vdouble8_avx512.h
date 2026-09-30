@@ -127,6 +127,13 @@ namespace esimd
 
   __forceinline vdouble8 operator +(const vdouble8& a) { return a; }
   __forceinline vdouble8 operator -(const vdouble8& a) { return _mm512_sub_pd(_mm512_setzero_pd(), a); }
+  __forceinline vdouble8 sqrt (const vdouble8& a) { return _mm512_sqrt_pd(a); }
+  __forceinline vdouble8 rsqrt(const vdouble8& a)
+  {
+    const vdouble8 r = _mm512_rsqrt14_pd(a);
+    return _mm512_fmadd_pd(_mm512_set1_pd(1.5), r,
+                           _mm512_mul_pd(_mm512_mul_pd(_mm512_mul_pd(a, _mm512_set1_pd(-0.5)), r), _mm512_mul_pd(r, r)));
+  }
 
   ////////////////////////////////////////////////////////////////////////////////
   /// Binary Operators
@@ -143,6 +150,10 @@ namespace esimd
   __forceinline vdouble8 operator *(const vdouble8& a, const vdouble8& b) { return _mm512_mul_pd(a, b); }
   __forceinline vdouble8 operator *(const vdouble8& a, double          b) { return a * vdouble8(b); }
   __forceinline vdouble8 operator *(double          a, const vdouble8& b) { return vdouble8(a) * b; }
+
+  __forceinline vdouble8 operator /(const vdouble8& a, const vdouble8& b) { return _mm512_div_pd(a, b); }
+  __forceinline vdouble8 operator /(const vdouble8& a, double          b) { return a / vdouble8(b); }
+  __forceinline vdouble8 operator /(double          a, const vdouble8& b) { return vdouble8(a) / b; }
 
   __forceinline vdouble8 operator &(const vdouble8& a, const vdouble8& b) { return _mm512_and_pd(a, b); }
   __forceinline vdouble8 operator &(const vdouble8& a, double          b) { return a & vdouble8(b); }
@@ -202,6 +213,9 @@ namespace esimd
 
   __forceinline vdouble8& operator *=(vdouble8& a, const vdouble8& b) { return a = a * b; }
   __forceinline vdouble8& operator *=(vdouble8& a, double          b) { return a = a * b; }
+
+  __forceinline vdouble8& operator /=(vdouble8& a, const vdouble8& b) { return a = a / b; }
+  __forceinline vdouble8& operator /=(vdouble8& a, double          b) { return a = a / b; }
 
   __forceinline vdouble8& operator &=(vdouble8& a, const vdouble8& b) { return a = a & b; }
   __forceinline vdouble8& operator &=(vdouble8& a, double          b) { return a = a & b; }
