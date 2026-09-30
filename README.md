@@ -67,6 +67,15 @@ translation unit with matching flags (the `-m` codegen flag and the matching `-D
 define must agree). Translation units that include `<esimd/trig.h>` additionally need
 `-ffp-contract=off` — see [Trigonometry](#trigonometry-optional).
 
+> **MSVC note:** `cl` predefines `__AVX__`, `__AVX2__` and `__AVX512*__`, but none of
+> the SSE-family macros or `__FMA__`. esimd derives those from `/arch:AVX` and up, so
+> `/arch` alone is enough there. `/arch:SSE4.2` defines no macro at all, which leaves
+> nothing to derive from. Pass `/arch:SSE4.2 /D__SSE4_1__ /D__SSE4_2__` explicitly,
+> or the TU gets the SSE2 backend: `ESIMD_ISA_NAME` is `"SSE2"` and
+> `ESIMD_HAS_VLLONG2` is `0`. `esimd_add_isa_target` passes these defines for you.
+> For `<esimd/trig.h>`, `cl`'s default `/fp:precise` stands in for
+> `-ffp-contract=off`; avoid `/fp:fast` and `/fp:contract`.
+
 ## What is available: `<esimd/features.h>`
 
 Which types exist depends only on the ISA flags of the translation unit.
@@ -189,6 +198,24 @@ cmake --build build-arm64
 
 Copy the resulting `build*/include/sleefinline_*.h` into
 `include/esimd/detail/sleef/`.
+
+MSVC `cl` uses its own x86 set in `include/esimd/detail/sleef/msvc/`. SLEEF writes
+compiler builtins into the headers at generation time, so this set must be generated
+with `cl`. Do this on Windows from a Developer Command Prompt, with a `sed` on `PATH`
+(busybox-w32 works):
+
+```bat
+cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl ^
+      -DCMAKE_CXX_COMPILER=cl -DSLEEF_BUILD_INLINE_HEADERS=ON -DSLEEF_BUILD_TESTS=OFF ^
+      -DCMAKE_INSTALL_PREFIX=%CD%\install -DSED_COMMAND:STRING=sed ^
+      -DCOMPILER_SUPPORTS_BUILTIN_MATH=0
+cmake --build build
+```
+
+`SED_COMMAND` has to be passed as a bare `STRING`, because cmd cannot run a
+forward-slash path after a pipe. `COMPILER_SUPPORTS_BUILTIN_MATH` is set in advance
+because that configure check crashes `cl`. Convert the output to LF line endings
+before copying it in.
 
 ## Data types
 
@@ -327,6 +354,7 @@ include/esimd/            public headers
                           emulation.h — pulled in automatically on AArch64
     sleef/                vendored SLEEF 4.0.0 inline headers (BSL-1.0), one per
                           ISA — used only by trig.h
+      msvc/               the x86 set regenerated with cl, for MSVC builds
   types/                  the optional data types themselves — reached via types.h:
                           vec2.h (Vec2<T>) / vec2fa.h (Vec2fa)
                           vec3.h (Vec3<T>) / vec3fa.h (Vec3fa, Vec3fx)

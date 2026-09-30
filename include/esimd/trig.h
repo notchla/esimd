@@ -6,11 +6,12 @@
 //
 // Opt-in: <esimd/esimd.h> never pulls this in.
 //
-// COMPILE THIS TRANSLATION UNIT WITH -ffp-contract=off. SLEEF reconstructs the
-// rounding error of an unfused a*b, which a contracted FMA discards, so the ULP
-// bounds below do not hold without it. The `#pragma STDC FP_CONTRACT OFF` the
-// headers carry is honoured by Clang and ignored by GCC. esimd::esimd does not
-// supply the flag, as that would disable contraction in every TU linking it.
+// COMPILE THIS TRANSLATION UNIT WITH -ffp-contract=off (/fp:precise under cl,
+// not /fp:fast or /fp:contract). SLEEF reconstructs the rounding error of an
+// unfused a*b, which a contracted FMA discards, so the ULP bounds below do not
+// hold without it. The `#pragma STDC FP_CONTRACT OFF` the headers carry is
+// honoured by Clang and ignored by GCC. esimd::esimd does not supply the flag,
+// as that would disable contraction in every TU linking it.
 //
 //   f(x)        SLEEF u10    -- <=1   ULP
 //   f_u35(x)    SLEEF u35    -- <=3.5 ULP, faster
@@ -37,16 +38,34 @@
 #  pragma GCC diagnostic ignored "-Wunused-function"
 #endif
 
+// cl gets its own build of the x86 headers, since the GCC one calls __builtin_*
+// and declares __float128. That build still uses C compound literals (C4576),
+// and its float constants are double literals (C4305).
+#if defined(_MSC_VER) && !defined(__clang__)
+#  pragma warning(push)
+#  pragma warning(disable : 4576 4305)
+#endif
+
 #if !ESIMD_TRIG_SLEEF
 #  define ESIMD_TRIG_SCALAR_FALLBACK
 #elif ESIMD_ISA_NEON || ESIMD_ISA_NEON2X
 #  include "detail/sleef/sleefinline_advsimd.h"
+#elif defined(_MSC_VER) && !defined(__clang__)
+#  include "detail/sleef/msvc/sleefinline_avx2128.h"
+#  include "detail/sleef/msvc/sleefinline_avx2.h"
+#  if ESIMD_ISA_AVX512
+#    include "detail/sleef/msvc/sleefinline_avx512f.h"
+#  endif
 #else
 #  include "detail/sleef/sleefinline_avx2128.h"
 #  include "detail/sleef/sleefinline_avx2.h"
 #  if ESIMD_ISA_AVX512
 #    include "detail/sleef/sleefinline_avx512f.h"
 #  endif
+#endif
+
+#if defined(_MSC_VER) && !defined(__clang__)
+#  pragma warning(pop)
 #endif
 
 #if defined(__GNUC__)

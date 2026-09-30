@@ -29,21 +29,44 @@ include(CheckCXXSourceRuns)
 # Cached (INTERNAL) so they are visible in every scope that uses the helper,
 # including a consumer project that only include()s this module.
 # ----------------------------------------------------------------------------
-set(ESIMD_FLAGS_SSE42
-    -msse4.2 -D__SSE__ -D__SSE2__ -D__SSE4_1__ -D__SSE4_2__
-    CACHE INTERNAL "esimd SSE4.2 flag/define set")
-set(ESIMD_FLAGS_AVX
-    -mavx -mbmi -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__BMI__
-    CACHE INTERNAL "esimd AVX flag/define set")
-set(ESIMD_FLAGS_AVX2
-    -mavx2 -mfma -mf16c -mbmi -mbmi2 -mlzcnt
-    -D__AVX2__ -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__LZCNT__ -D__BMI__
-    CACHE INTERNAL "esimd AVX2 flag/define set")
-set(ESIMD_FLAGS_AVX512
-    -march=skylake-avx512 -mavx2 -mfma -mf16c -mbmi -mbmi2 -mlzcnt
-    -D__AVX512F__ -D__AVX512VL__ -D__AVX512DQ__ -D__AVX512BW__
-    -D__AVX2__ -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__LZCNT__ -D__BMI__
-    CACHE INTERNAL "esimd AVX512 flag/define set")
+if(MSVC)
+  # cl / clang-cl. /arch only authorizes codegen: cl predefines __AVX*__ but no
+  # SSE-family macro, and /arch:SSE4.2 predefines nothing, so every macro the
+  # headers branch on is passed explicitly. __BMI__/__LZCNT__ are left out:
+  # detail/intrinsics.h maps them to GCC builtins cl does not have.
+  set(ESIMD_FLAGS_SSE42
+      /arch:SSE4.2 /D__SSE__ /D__SSE2__ /D__SSE3__ /D__SSSE3__ /D__SSE4_1__ /D__SSE4_2__
+      CACHE INTERNAL "esimd SSE4.2 flag/define set")
+  set(ESIMD_FLAGS_AVX
+      /arch:AVX /D__SSE__ /D__SSE2__ /D__SSE3__ /D__SSSE3__ /D__SSE4_1__ /D__SSE4_2__
+      /D__AVX__
+      CACHE INTERNAL "esimd AVX flag/define set")
+  set(ESIMD_FLAGS_AVX2
+      /arch:AVX2 /D__SSE__ /D__SSE2__ /D__SSE3__ /D__SSSE3__ /D__SSE4_1__ /D__SSE4_2__
+      /D__AVX__ /D__AVX2__ /D__FMA__
+      CACHE INTERNAL "esimd AVX2 flag/define set")
+  set(ESIMD_FLAGS_AVX512
+      /arch:AVX512 /D__SSE__ /D__SSE2__ /D__SSE3__ /D__SSSE3__ /D__SSE4_1__ /D__SSE4_2__
+      /D__AVX__ /D__AVX2__ /D__FMA__
+      /D__AVX512F__ /D__AVX512VL__ /D__AVX512DQ__ /D__AVX512BW__
+      CACHE INTERNAL "esimd AVX512 flag/define set")
+else()
+  set(ESIMD_FLAGS_SSE42
+      -msse4.2 -D__SSE__ -D__SSE2__ -D__SSE4_1__ -D__SSE4_2__
+      CACHE INTERNAL "esimd SSE4.2 flag/define set")
+  set(ESIMD_FLAGS_AVX
+      -mavx -mbmi -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__BMI__
+      CACHE INTERNAL "esimd AVX flag/define set")
+  set(ESIMD_FLAGS_AVX2
+      -mavx2 -mfma -mf16c -mbmi -mbmi2 -mlzcnt
+      -D__AVX2__ -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__LZCNT__ -D__BMI__
+      CACHE INTERNAL "esimd AVX2 flag/define set")
+  set(ESIMD_FLAGS_AVX512
+      -march=skylake-avx512 -mavx2 -mfma -mf16c -mbmi -mbmi2 -mlzcnt
+      -D__AVX512F__ -D__AVX512VL__ -D__AVX512DQ__ -D__AVX512BW__
+      -D__AVX2__ -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__LZCNT__ -D__BMI__
+      CACHE INTERNAL "esimd AVX512 flag/define set")
+endif()
 
 # ARM: NEON is baseline on AArch64, so there are no -m codegen flags here -- the
 # -D defines alone pick the backend, and the x86 intrinsics they name are
@@ -123,7 +146,8 @@ function(esimd_add_isa_target name isa)
   endif()
   add_executable(${name} ${A_SOURCES})
   target_link_libraries(${name} PRIVATE esimd::esimd ${A_LINKS})
-  target_compile_options(${name} PRIVATE ${ESIMD_FLAGS_${isa}} -Wall)
+  # cl's /Wall also enables its off-by-default warnings, so it gets /W3.
+  target_compile_options(${name} PRIVATE ${ESIMD_FLAGS_${isa}} $<IF:$<BOOL:${MSVC}>,/W3,-Wall>)
   # Register a ctest entry only for labeled targets (tests). Unlabeled targets
   # (benchmarks, examples) build but are run manually.
   if(host_ok AND A_LABELS)

@@ -35,6 +35,38 @@
 #  endif
 #endif
 
+/* MSVC predefines only __AVX__, __AVX2__ and __AVX512*__, never the SSE family
+   or __FMA__, so derive what /arch guarantees. /arch:SSE4.2 sets no macro at
+   all; pass /D__SSE4_1__ /D__SSE4_2__ for it (esimdISA.cmake does). __BMI__ and
+   __LZCNT__ are deliberately not derived: intrinsics.h maps them to GCC builtins. */
+#if defined(_MSC_VER) && !defined(__clang__)
+#  if defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
+#    if !defined(__SSE__)
+#      define __SSE__
+#    endif
+#    if !defined(__SSE2__)
+#      define __SSE2__
+#    endif
+#  endif
+#  if defined(__AVX__)
+#    if !defined(__SSE3__)
+#      define __SSE3__
+#    endif
+#    if !defined(__SSSE3__)
+#      define __SSSE3__
+#    endif
+#    if !defined(__SSE4_1__)
+#      define __SSE4_1__
+#    endif
+#    if !defined(__SSE4_2__)
+#      define __SSE4_2__
+#    endif
+#  endif
+#  if defined(__AVX2__) && !defined(__FMA__)
+#    define __FMA__
+#  endif
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Macros
 ////////////////////////////////////////////////////////////////////////////////

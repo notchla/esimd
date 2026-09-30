@@ -122,11 +122,19 @@ esimd_add_isa_target(esimd_test_trig_neon2x NEON2X
 # Required by <esimd/trig.h>: without it SLEEF's error compensation breaks and
 # the ULP assertions are void. esimd::esimd does not force it on consumers.
 # esimd_add_isa_target skips ISAs the host cannot execute, hence if(TARGET).
+# cl's /fp:precise has not contracted since VS 2022 17.0.
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  set(esimd_no_contract /fp:precise)
+elseif(MSVC) # clang-cl
+  set(esimd_no_contract /clang:-ffp-contract=off)
+else()
+  set(esimd_no_contract -ffp-contract=off)
+endif()
 foreach(t esimd_test_trig_sse42 esimd_test_trig_avx
           esimd_test_trig_avx2  esimd_test_trig_avx512
           esimd_test_trig_neon  esimd_test_trig_neon2x)
   if(TARGET ${t})
-    target_compile_options(${t} PRIVATE -ffp-contract=off)
+    target_compile_options(${t} PRIVATE ${esimd_no_contract})
   endif()
 endforeach()
 
