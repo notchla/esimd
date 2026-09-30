@@ -67,6 +67,48 @@ translation unit with matching flags (the `-m` codegen flag and the matching `-D
 define must agree). Translation units that include `<esimd/trig.h>` additionally need
 `-ffp-contract=off` — see [Trigonometry](#trigonometry-optional).
 
+## What is available: `<esimd/features.h>`
+
+Which types exist depends only on the ISA flags of the translation unit.
+`<esimd/features.h>` states it as preprocessor macros; every entry header includes it,
+and it can also be included on its own to query a configuration:
+
+| macro | meaning |
+|-------|---------|
+| `ESIMD_ISA_SCALAR` `_SSE` `_AVX` `_AVX2` `_AVX512` `_NEON` `_NEON2X` | exactly one is `1`: the backend this TU gets |
+| `ESIMD_ISA_NAME` | that backend as a string (`"SSE2"`, `"SSE4.2"`, `"AVX2"`, `"NEON2X"`, ...) |
+| `ESIMD_HAS_<TYPE>` | `1` when the type has a SIMD implementation, e.g. `ESIMD_HAS_VDOUBLE4`, `ESIMD_HAS_VLLONG2`, `ESIMD_HAS_VFLOAT16` |
+| `ESIMD_TRIG_SLEEF` | `1` when `<esimd/trig.h>` is SLEEF-backed, `0` for the per-lane libm fallback |
+
+All are always defined as `0` or `1`, so test them with `#if` (and `-Wundef` catches
+typos). A type whose macro is `0` still names the generic array struct from
+`varying.h`, which has no operators — use the macro instead of relying on that.
+
+```cpp
+#include <esimd/esimd.h>
+
+#if ESIMD_HAS_VDOUBLE4
+void kernel(esimd::vdouble4& x);   // x86-64 AVX and up; absent on NEON2X
+#endif
+
+static_assert(ESIMD_HAS_VFLOAT8, "build this file with -mavx2 (or NEON2X)");
+
+int main() { std::puts(ESIMD_ISA_NAME); }   // what did this build get?
+```
+
+Code that names no fixed width should keep using `VSIZEX` / `VSIZEXD` and the `x`
+aliases (`vfloatx`, `vdoublexd`, ...). They name a SIMD type on every non-scalar
+backend except `vllongxd`: it has no SIMD implementation on plain SSE2
+(`ESIMD_HAS_VLLONG2` needs SSE4.2) or on plain AVX, where `VSIZEXD` is 4 but
+`ESIMD_HAS_VLLONG4` needs AVX2.
+
+The macros cover types, not individual functions: the per-function ARM gaps listed
+above (e.g. `permute` on NEON2X) are still keyed on `ESIMD_ARM64`.
+
+Each translation unit sees one ISA. Linking translation units built with different
+ISA flags into one binary violates the ODR (`vfloat8`, `VSIZEX`, ... differ between
+them); build one binary per ISA, as `esimd_add_isa_target` does.
+
 ## Trigonometry (optional)
 
 `<esimd/trig.h>` adds SLEEF-backed trigonometry to the existing vector types. It is
@@ -120,7 +162,8 @@ so SSE4.2 and plain AVX fall back to a per-lane libm loop.
 
 ### The SSE4.2 / AVX scalar fallback
 
-`<esimd/trig.h>` defines `ESIMD_TRIG_SCALAR_FALLBACK` when this path is active. It is
+`<esimd/trig.h>` defines `ESIMD_TRIG_SCALAR_FALLBACK` when this path is active
+(equivalently, `ESIMD_TRIG_SLEEF` is `0`). It is
 **not vectorised** — one libm call per lane, several times slower than the SLEEF path
 — and all three accuracy flavours collapse to the same call, so `sin_u35` and
 `fast_sin` buy nothing there. Accuracy is your libm's rather than SLEEF's; glibc stays
@@ -162,7 +205,7 @@ Vec2f  p(3.0f, 4.0f);
 float  d = length(p);          // 5.0f
 
 Vec2<vfloat8> q(vfloat8(3.0f), vfloat8(4.0f));
-vfloat8 l = length(q);         // 8 lanes at once -- same code, T = vfloat8
+vfloat8 l = length(q);         // same code, 8 lanes at once
 
 Vec2fa a(1.0f, 2.0f);          // SSE-backed, x/y in one __m128
 
@@ -248,7 +291,7 @@ find_package(esimd REQUIRED)          # imports esimd::esimd and includes esimdI
 # link only (you supply the ISA flags yourself):
 add_executable(app main.cpp)
 target_link_libraries(app PRIVATE esimd::esimd)
-target_compile_options(app PRIVATE ${ESIMD_FLAGS_AVX2})   # or -mavx2 -D__AVX2__ ...
+target_compile_options(app PRIVATE ${ESIMD_FLAGS_AVX2})   # or -mavx2 -mfma
 
 # ...or let the helper build a host-gated per-ISA executable for you:
 esimd_add_isa_target(app_sse    SSE42  SOURCES main.cpp)
@@ -270,11 +313,12 @@ list both the x86 and the ARM variants. Pass `LABELS` to also register a `ctest`
 ```
 include/esimd/            public headers
   esimd.h                 master include (ISA dispatch + cross-width helpers)
+  features.h              ESIMD_ISA_* / ESIMD_HAS_* availability macros
   trig.h                  optional SLEEF-backed trigonometry (opt-in include)
   types.h                 optional data types (opt-in include)
   varying.h               scalar fallback types, vtypes<N>, width aliases
   sse.h avx.h avx512.h    per-ISA entry points
-  v*4_sse2.h              SSE / 128-bit 4-wide types
+  v*4_sse2.h v*2_sse2.h   SSE / 128-bit types (4-wide 32-bit, 2-wide 64-bit)
   v*8_avx*.h v*4_avx2.h   AVX / AVX2 / 256-bit 8-wide types
   v*16_avx512.h v*8_avx512.h  AVX512 / 512-bit types
   detail/                 support headers (platform, intrinsics, constants, emath,

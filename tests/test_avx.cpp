@@ -245,9 +245,8 @@ TEST(vboold4, construct_logical_reduce) {
   EXPECT_TRUE (none(vboold4(esimd::False)));
 }
 
-// vdouble4 is gated on __X86_64__ in avx.h, so it does not exist under NEON2X.
-// (vboold4 above is unconditional and is exercised on ARM too.)
-#if !defined(ESIMD_ARM64)
+// vdouble4 does not exist under NEON2X; vboold4 above does and runs on ARM too.
+#if ESIMD_HAS_VDOUBLE4
 
 TEST(vdouble4, constructors_and_arithmetic) {
   expect_eq(vdouble4(2.5), {2.5, 2.5, 2.5, 2.5});
@@ -310,4 +309,4 @@ TEST(vdouble4, deinterleave) {
   EXPECT_DOUBLE_EQ(toScalar(vdouble4(9.0, 0.0, 0.0, 0.0)), 9.0);
 }
 
-#endif // !ESIMD_ARM64
+#endif // ESIMD_HAS_VDOUBLE4

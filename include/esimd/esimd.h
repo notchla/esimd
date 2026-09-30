@@ -3,20 +3,21 @@
 
 #pragma once
 
+#include "features.h"
 #include "detail/emath.h"
 
 /* include SSE wrapper classes */
-#if defined(__SSE__) || defined(__ARM_NEON) || defined(ESIMD_ARM64)
+#if !ESIMD_ISA_SCALAR
 #  include "sse.h"
 #endif
 
 /* include AVX wrapper classes */
-#if defined(__AVX__)
+#if ESIMD_ISA_AVX || ESIMD_ISA_AVX2 || ESIMD_ISA_AVX512 || ESIMD_ISA_NEON2X
 #  include "avx.h"
 #endif
 
 /* include AVX512 wrapper classes */
-#if defined(__AVX512F__)
+#if ESIMD_ISA_AVX512
 #  include "avx512.h"
 #endif
 

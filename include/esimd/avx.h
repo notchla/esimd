@@ -16,18 +16,18 @@
 #if defined(__AVX2__)
 #include "vint8_avx2.h"
 #include "vuint8_avx2.h"
-#if defined(__X86_64__)
-#include "vllong4_avx2.h"
-#endif
 #else
 #include "vint8_avx.h"
 #include "vuint8_avx.h"
 #endif
+#if ESIMD_HAS_VLLONG4
+#include "vllong4_avx2.h"
+#endif
 #include "vfloat8_avx.h"
-#if defined(__X86_64__)
+#if ESIMD_HAS_VDOUBLE4
 #include "vdouble4_avx.h"
 #endif
 
-#if defined(__AVX512F__)
+#if ESIMD_ISA_AVX512
 #include "avx512.h"
 #endif

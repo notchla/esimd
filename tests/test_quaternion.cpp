@@ -323,9 +323,9 @@ TEST(fastapprox, scalar) {
   }
 
 ESIMD_QUATERNION_TESTS(Quaternion_vfloat4, vfloat4)
-#if defined(__AVX__)
+#if ESIMD_HAS_VFLOAT8
 ESIMD_QUATERNION_TESTS(Quaternion_vfloat8, vfloat8)
 #endif
-#if defined(__AVX512F__)
+#if ESIMD_HAS_VFLOAT16
 ESIMD_QUATERNION_TESTS(Quaternion_vfloat16, vfloat16)
 #endif

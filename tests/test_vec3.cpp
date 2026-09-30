@@ -441,10 +441,10 @@ TEST(Vec3b, logic) {
   }
 
 ESIMD_VEC3_TESTS(Vec3_vfloat4, vfloat4)
-#if defined(__AVX__)
+#if ESIMD_HAS_VFLOAT8
 ESIMD_VEC3_TESTS(Vec3_vfloat8, vfloat8)
 #endif
-#if defined(__AVX512F__)
+#if ESIMD_HAS_VFLOAT16
 ESIMD_VEC3_TESTS(Vec3_vfloat16, vfloat16)
 #endif
 
@@ -468,7 +468,7 @@ ESIMD_VEC3_TESTS(Vec3_vfloat16, vfloat16)
   }
 
 ESIMD_VEC3_SHUFFLE_TESTS(Vec3_vfloat4, vfloat4)
-#if defined(__AVX__)
+#if ESIMD_HAS_VFLOAT8
 ESIMD_VEC3_SHUFFLE_TESTS(Vec3_vfloat8, vfloat8)
 #endif
 

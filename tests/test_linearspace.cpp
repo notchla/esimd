@@ -388,9 +388,9 @@ TEST(LinearSpace3fa, sse_backed) {
   }
 
 ESIMD_LINEARSPACE_TESTS(LinearSpace_vfloat4, vfloat4)
-#if defined(__AVX__)
+#if ESIMD_HAS_VFLOAT8
 ESIMD_LINEARSPACE_TESTS(LinearSpace_vfloat8, vfloat8)
 #endif
-#if defined(__AVX512F__)
+#if ESIMD_HAS_VFLOAT16
 ESIMD_LINEARSPACE_TESTS(LinearSpace_vfloat16, vfloat16)
 #endif

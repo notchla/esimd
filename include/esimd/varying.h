@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "detail/platform.h"
+#include "features.h"
 
 namespace esimd
 {
@@ -64,10 +64,9 @@ namespace esimd
   const int VSIZEL = 4;
 #endif
 
-  /* vdouble4 is x86-only, so NEON2X falls back to vdouble2 despite __AVX__ */
 #if defined(__AVX512VL__)
   const int VSIZEXD = 8;
-#elif defined(__AVX__) && defined(__X86_64__)
+#elif ESIMD_HAS_VDOUBLE4
   const int VSIZEXD = 4;
 #else
   const int VSIZEXD = 2;

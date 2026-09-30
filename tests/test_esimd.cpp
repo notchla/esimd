@@ -13,9 +13,50 @@
 #include <set>
 #include <vector>
 #include <limits>
+#include <type_traits>
 
 using namespace esimd;
 using namespace esimd_test;
+
+////////////////////////////////////////////////////////////////////////////////
+// features.h agrees with what the headers actually provide
+////////////////////////////////////////////////////////////////////////////////
+
+namespace {
+// SIMD specializations declare `size`; the generic *_impl fallbacks do not.
+template<typename T, typename = void> struct is_simd : std::false_type {};
+template<typename T> struct is_simd<T, std::void_t<decltype(T::size)>> : std::true_type {};
+}
+
+#define ESIMD_CHECK_HAS(T, M) static_assert(is_simd<T>::value == bool(M), #M " disagrees with " #T);
+ESIMD_CHECK_HAS(vboolf4,  ESIMD_HAS_VBOOLF4)
+ESIMD_CHECK_HAS(vint4,    ESIMD_HAS_VINT4)
+ESIMD_CHECK_HAS(vuint4,   ESIMD_HAS_VUINT4)
+ESIMD_CHECK_HAS(vfloat4,  ESIMD_HAS_VFLOAT4)
+ESIMD_CHECK_HAS(vboold2,  ESIMD_HAS_VBOOLD2)
+ESIMD_CHECK_HAS(vllong2,  ESIMD_HAS_VLLONG2)
+ESIMD_CHECK_HAS(vdouble2, ESIMD_HAS_VDOUBLE2)
+ESIMD_CHECK_HAS(vboolf8,  ESIMD_HAS_VBOOLF8)
+ESIMD_CHECK_HAS(vint8,    ESIMD_HAS_VINT8)
+ESIMD_CHECK_HAS(vuint8,   ESIMD_HAS_VUINT8)
+ESIMD_CHECK_HAS(vfloat8,  ESIMD_HAS_VFLOAT8)
+ESIMD_CHECK_HAS(vboold4,  ESIMD_HAS_VBOOLD4)
+ESIMD_CHECK_HAS(vllong4,  ESIMD_HAS_VLLONG4)
+ESIMD_CHECK_HAS(vdouble4, ESIMD_HAS_VDOUBLE4)
+ESIMD_CHECK_HAS(vboolf16, ESIMD_HAS_VBOOLF16)
+ESIMD_CHECK_HAS(vint16,   ESIMD_HAS_VINT16)
+ESIMD_CHECK_HAS(vuint16,  ESIMD_HAS_VUINT16)
+ESIMD_CHECK_HAS(vfloat16, ESIMD_HAS_VFLOAT16)
+ESIMD_CHECK_HAS(vboold8,  ESIMD_HAS_VBOOLD8)
+ESIMD_CHECK_HAS(vllong8,  ESIMD_HAS_VLLONG8)
+ESIMD_CHECK_HAS(vdouble8, ESIMD_HAS_VDOUBLE8)
+#undef ESIMD_CHECK_HAS
+
+static_assert(ESIMD_ISA_SCALAR + ESIMD_ISA_SSE + ESIMD_ISA_AVX + ESIMD_ISA_AVX2 +
+              ESIMD_ISA_AVX512 + ESIMD_ISA_NEON + ESIMD_ISA_NEON2X == 1,
+              "exactly one ESIMD_ISA_* must be 1");
+static_assert(is_simd<vfloatx>::value && is_simd<vdoublexd>::value && is_simd<vbooldxd>::value,
+              "the default-width aliases must name SIMD types");
 
 ////////////////////////////////////////////////////////////////////////////////
 // isfinite (cross-width)
@@ -150,7 +191,7 @@ TEST(esimd_integration, default_width_aliases) {
 TEST(esimd_integration, double_width_aliases) {
 #if defined(__AVX512VL__)
   EXPECT_EQ(VSIZEXD, 8);
-#elif defined(__AVX__) && defined(__X86_64__)
+#elif ESIMD_HAS_VDOUBLE4
   EXPECT_EQ(VSIZEXD, 4);
 #else
   EXPECT_EQ(VSIZEXD, 2);

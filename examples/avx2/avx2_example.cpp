@@ -57,9 +57,8 @@ int main() {
   print("u", u, 8);
   print("min(u, 45)", min(u, vuint8(45u)), 8);
 
-  // 64-bit integer lanes (only present under AVX2 / __X86_64__).
-#if !defined(ESIMD_ARM64)
-  // vllong4 is gated on __X86_64__ in avx.h, so it does not exist under NEON2X.
+  // 64-bit integer lanes; absent under NEON2X.
+#if ESIMD_HAS_VLLONG4
   const vllong4 L(1000000000ll, 2000000000ll, 3ll, 4ll);
   const vllong4 M(3ll, 3ll, 3ll, 3ll);
   print("L", L, 4);

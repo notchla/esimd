@@ -169,15 +169,15 @@ ESIMD_TRIG_TESTS(trig_vfloat4, vfloat4)
 ESIMD_TRIG_FAST_TESTS(trig_vfloat4, vfloat4)
 ESIMD_TRIG_TESTS(trig_vdouble2, vdouble2)
 
-#if defined(__AVX__) // AVX, AVX2, AVX512 and NEON2X all reach the 8-wide types
+#if ESIMD_HAS_VFLOAT8
 ESIMD_TRIG_TESTS(trig_vfloat8, vfloat8)
 ESIMD_TRIG_FAST_TESTS(trig_vfloat8, vfloat8)
-#if defined(__X86_64__)
+#endif
+#if ESIMD_HAS_VDOUBLE4
 ESIMD_TRIG_TESTS(trig_vdouble4, vdouble4)
 #endif
-#endif
 
-#if defined(__AVX512F__)
+#if ESIMD_HAS_VFLOAT16
 ESIMD_TRIG_TESTS(trig_vfloat16, vfloat16)
 ESIMD_TRIG_FAST_TESTS(trig_vfloat16, vfloat16)
 ESIMD_TRIG_TESTS(trig_vdouble8, vdouble8)

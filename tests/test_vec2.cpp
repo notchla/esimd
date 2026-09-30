@@ -391,11 +391,11 @@ TEST(Vec2b, construction_and_select) {
 // vfloat4 is the only width every backend has; the rest follow the ISA.
 ESIMD_VEC2_TESTS(Vec2_vfloat4, vfloat4)
 
-#if defined(__AVX__) // AVX, AVX2, AVX512 and NEON2X all reach the 8-wide types
+#if ESIMD_HAS_VFLOAT8
 ESIMD_VEC2_TESTS(Vec2_vfloat8, vfloat8)
 #endif
 
-#if defined(__AVX512F__)
+#if ESIMD_HAS_VFLOAT16
 ESIMD_VEC2_TESTS(Vec2_vfloat16, vfloat16)
 #endif
 

@@ -63,7 +63,7 @@ namespace esimd
 #else
 #include "vboold2_sse2.h"
 #endif
-#if defined(__64BIT__)
+#if ESIMD_HAS_VLLONG2
 #include "vllong2_sse2.h"
 #endif
 #include "vdouble2_sse2.h"

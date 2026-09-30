@@ -84,7 +84,7 @@ TEST(vuint8_avx2, compare_minmax_select_reduce) {
 // vllong4_avx2.h on __X86_64__, so the type does not exist under NEON2X.
 ////////////////////////////////////////////////////////////////////////////////
 
-#if !defined(ESIMD_ARM64)
+#if ESIMD_HAS_VLLONG4
 
 TEST(vllong4, constructors_and_load_store) {
   expect_eq(vllong4(7ll), {7ll, 7ll, 7ll, 7ll});
@@ -126,4 +126,4 @@ TEST(vllong4, compare_select_reduce) {
   EXPECT_EQ(toScalar(vllong4(42ll, 0ll, 0ll, 0ll)), 42ll);
 }
 
-#endif // !ESIMD_ARM64
+#endif // ESIMD_HAS_VLLONG4

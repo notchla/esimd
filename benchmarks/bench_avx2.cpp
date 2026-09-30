@@ -18,8 +18,8 @@ static std::vector<vint8> make_int_data(size_t n) {
   return v;
 }
 
-// vllong4 is gated on __X86_64__ in avx.h, so it does not exist under NEON2X.
-#if !defined(ESIMD_ARM64)
+// vllong4 does not exist under NEON2X.
+#if ESIMD_HAS_VLLONG4
 static std::vector<vllong4> make_llong_data(size_t n) {
   std::vector<vllong4> v(n);
   for (size_t i = 0; i < n; ++i)
@@ -60,7 +60,7 @@ static void BM_vint8_reduce_add(benchmark::State& state) {
 }
 BENCHMARK(BM_vint8_reduce_add);
 
-#if !defined(ESIMD_ARM64)
+#if ESIMD_HAS_VLLONG4
 static void BM_vllong4_add(benchmark::State& state) {
   auto data = make_llong_data(1024);
   for (auto _ : state) {

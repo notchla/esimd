@@ -18,7 +18,8 @@
 //
 // Each width dispatches to the SLEEF build for that same instruction set. SLEEF
 // generates inline headers only for FMA-capable targets, so SSE4.2 and plain
-// AVX instead get a per-lane libm loop, flagged by ESIMD_TRIG_SCALAR_FALLBACK.
+// AVX instead get a per-lane libm loop: ESIMD_TRIG_SLEEF (features.h) is 0 and
+// ESIMD_TRIG_SCALAR_FALLBACK is defined.
 
 #pragma once
 
@@ -27,10 +28,6 @@
 #include <cmath>
 #include <cstring> // the generated SLEEF headers call memcpy without including it
 
-// Backend selection. ARM must be tested first: the NEON2X flag set defines
-// __AVX2__/__AVX__ to reach the 8-wide types even though there is no x86
-// hardware, so the x86 branch would otherwise be taken on AArch64.
-//
 // The generated headers open with `#pragma STDC FP_CONTRACT OFF`, which GCC
 // does not implement, and define a handful of helpers this layer never calls.
 // SLEEF's own build silences both; do the same for the includes only.
@@ -40,16 +37,16 @@
 #  pragma GCC diagnostic ignored "-Wunused-function"
 #endif
 
-#if defined(ESIMD_ARM64)
+#if !ESIMD_TRIG_SLEEF
+#  define ESIMD_TRIG_SCALAR_FALLBACK
+#elif ESIMD_ISA_NEON || ESIMD_ISA_NEON2X
 #  include "detail/sleef/sleefinline_advsimd.h"
-#elif defined(__AVX2__)
+#else
 #  include "detail/sleef/sleefinline_avx2128.h"
 #  include "detail/sleef/sleefinline_avx2.h"
-#  if defined(__AVX512F__)
+#  if ESIMD_ISA_AVX512
 #    include "detail/sleef/sleefinline_avx512f.h"
 #  endif
-#else // SSE4.2, plain AVX: no SLEEF inline header exists for a non-FMA target
-#  define ESIMD_TRIG_SCALAR_FALLBACK
 #endif
 
 #if defined(__GNUC__)
@@ -59,7 +56,7 @@
 namespace esimd
 {
 
-#if defined(ESIMD_TRIG_SCALAR_FALLBACK)
+#if !ESIMD_TRIG_SLEEF
 
   // Apply a scalar function lane by lane. Not vectorised; it keeps the API
   // uniform on the ISAs SLEEF cannot serve.
@@ -106,15 +103,19 @@ namespace esimd
   __forceinline VEC fast_sin(const VEC& a) { return sin(a); }                                 \
   __forceinline VEC fast_cos(const VEC& a) { return cos(a); }
 
+#if ESIMD_HAS_VFLOAT4
   ESIMD_TRIG_SCALAR_DEFS(vfloat4)
   ESIMD_TRIG_SCALAR_FAST_DEFS(vfloat4)
+#endif
+#if ESIMD_HAS_VDOUBLE2
   ESIMD_TRIG_SCALAR_DEFS(vdouble2)
-#if defined(__AVX__) // plain AVX also has the 8-wide types
+#endif
+#if ESIMD_HAS_VFLOAT8
   ESIMD_TRIG_SCALAR_DEFS(vfloat8)
   ESIMD_TRIG_SCALAR_FAST_DEFS(vfloat8)
-#if defined(__X86_64__) // vdouble4 is gated the same way in avx.h
-  ESIMD_TRIG_SCALAR_DEFS(vdouble4)
 #endif
+#if ESIMD_HAS_VDOUBLE4
+  ESIMD_TRIG_SCALAR_DEFS(vdouble4)
 #endif
 
 #undef ESIMD_TRIG_SCALAR_DEFS
@@ -148,7 +149,7 @@ namespace esimd
   __forceinline VEC fast_sin(const VEC& a) { return Sleef_fastsin##TOK##_u3500##ISA(a); }     \
   __forceinline VEC fast_cos(const VEC& a) { return Sleef_fastcos##TOK##_u3500##ISA(a); }
 
-#if defined(ESIMD_ARM64)
+#if ESIMD_ISA_NEON || ESIMD_ISA_NEON2X
 
   // sse2neon typedefs __m128 / __m128d as float32x4_t / float64x2_t, exactly
   // what the advsimd functions take, so vfloat4 and vdouble2 convert straight
@@ -157,7 +158,7 @@ namespace esimd
   ESIMD_TRIG_FAST_DEFS(vfloat4, f4, advsimd)
   ESIMD_TRIG_DEFS(vdouble2, d2, advsimd)
 
-#if defined(__AVX__) // NEON2X: avx2neon makes __m256 a { __m128 lo, hi; } pair.
+#if ESIMD_ISA_NEON2X // avx2neon makes __m256 a { __m128 lo, hi; } pair.
 #define ESIMD_TRIG_PAIR_1(NAME, SLEEFNAME)                                                   \
   __forceinline vfloat8 NAME(const vfloat8& a) {                                              \
     __m256 r; r.lo = SLEEFNAME(a.v.lo); r.hi = SLEEFNAME(a.v.hi); return r; }
@@ -192,7 +193,7 @@ namespace esimd
 #undef ESIMD_TRIG_PAIR_1
 #undef ESIMD_TRIG_PAIR_2
 #undef ESIMD_TRIG_PAIR_SINCOS
-#endif // __AVX__ (NEON2X)
+#endif // ESIMD_ISA_NEON2X
 
 #else // x86 with AVX2 or better
 
@@ -201,20 +202,20 @@ namespace esimd
   ESIMD_TRIG_DEFS(vdouble2, d2, avx2128)
   ESIMD_TRIG_DEFS(vfloat8, f8, avx2)
   ESIMD_TRIG_FAST_DEFS(vfloat8, f8, avx2)
-#if defined(__X86_64__) // vdouble4 is gated the same way in avx.h
+#if ESIMD_HAS_VDOUBLE4
   ESIMD_TRIG_DEFS(vdouble4, d4, avx2)
 #endif
 
-#if defined(__AVX512F__)
+#if ESIMD_HAS_VFLOAT16
   ESIMD_TRIG_DEFS(vfloat16, f16, avx512f)
   ESIMD_TRIG_FAST_DEFS(vfloat16, f16, avx512f)
   ESIMD_TRIG_DEFS(vdouble8, d8, avx512f)
 #endif
 
-#endif // ESIMD_ARM64
+#endif // ESIMD_ISA_NEON || ESIMD_ISA_NEON2X
 
 #undef ESIMD_TRIG_DEFS
 #undef ESIMD_TRIG_FAST_DEFS
 
-#endif // ESIMD_TRIG_SCALAR_FALLBACK
+#endif // !ESIMD_TRIG_SLEEF
 }

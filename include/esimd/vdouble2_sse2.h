@@ -112,7 +112,7 @@ namespace esimd
   /// Unary Operators
   ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(__64BIT__)
+#if ESIMD_HAS_VLLONG2
   __forceinline vdouble2 asDouble(const vllong2&  a) { return _mm_castsi128_pd(a); }
   __forceinline vllong2  asLLong (const vdouble2& a) { return _mm_castpd_si128(a); }
 #endif
