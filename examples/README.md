@@ -8,9 +8,9 @@ whole point of these folders: same source, different `-m`/`-D` flags → differe
 | folder     | native types shown                          | build flags |
 |------------|---------------------------------------------|-------------|
 | `sse/`     | `vfloat4`, `vint4`, `vboolf4` (128-bit)     | `-msse4.2 -D__SSE__ -D__SSE2__ -D__SSE4_1__ -D__SSE4_2__` |
-| `avx/`     | `vfloat8`, `vdouble4` (256-bit)             | `-mavx -mbmi -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__BMI__` |
+| `avx/`     | `vfloat8`, `vdouble4` (256-bit)             | `-mavx -D__AVX__ -D__SSE4_2__ -D__SSE4_1__` |
 | `avx2/`    | `vint8`, `vuint8`, `vllong4` (native int)   | `-mavx2 -mfma -mf16c -mbmi -mbmi2 -mlzcnt -D__AVX2__ -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__LZCNT__ -D__BMI__` |
-| `avx512/`  | `vfloat16`, `vdouble8`, `vboolf16` masks    | `-march=skylake-avx512 -mavx2 -mfma -mf16c -mbmi -mbmi2 -mlzcnt -D__AVX512F__ -D__AVX512VL__ -D__AVX512DQ__ -D__AVX512BW__ -D__AVX2__ -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__LZCNT__ -D__BMI__` |
+| `avx512/`  | `vfloat16`, `vdouble8`, `vboolf16` masks    | `-mavx512f -mavx512vl -mavx512dq -mavx512bw -mavx2 -mfma -mf16c -mbmi -mbmi2 -mlzcnt -D__AVX512F__ -D__AVX512VL__ -D__AVX512DQ__ -D__AVX512BW__ -D__AVX2__ -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__LZCNT__ -D__BMI__` |
 | `portable/`| `vfloatx`, `vintx`, `vboolx`, `VSIZEX`       | *any* of the rows above — the same source builds for every ISA |
 | `portable_double/`| `vdoublexd`, `vbooldxd`, `VSIZEXD`   | *any* of the rows above |
 

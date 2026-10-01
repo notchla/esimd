@@ -119,5 +119,10 @@
 /// Optional layers
 ////////////////////////////////////////////////////////////////////////////////
 
-// SLEEF ships inline headers only for FMA-capable targets.
-#define ESIMD_TRIG_SLEEF (ESIMD_ISA_NEON || ESIMD_ISA_NEON2X || ESIMD_ISA_AVX2 || ESIMD_ISA_AVX512)
+// SLEEF ships inline headers only for FMA-capable targets. -mavx2 and
+// -mavx512f do not imply -mfma.
+#if ESIMD_ISA_NEON || ESIMD_ISA_NEON2X || ((ESIMD_ISA_AVX2 || ESIMD_ISA_AVX512) && defined(__FMA__))
+#  define ESIMD_TRIG_SLEEF 1
+#else
+#  define ESIMD_TRIG_SLEEF 0
+#endif

@@ -10,7 +10,7 @@
 // Build standalone (from this folder):
 //
 //   g++ -std=c++17 -I../../include \
-//       -mavx -mbmi -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__BMI__ \
+//       -mavx -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ \
 //       avx_example.cpp -o avx_example
 //   ./avx_example
 //

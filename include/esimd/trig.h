@@ -7,20 +7,22 @@
 // Opt-in: <esimd/esimd.h> never pulls this in.
 //
 // COMPILE THIS TRANSLATION UNIT WITH -ffp-contract=off (/fp:precise under cl,
-// not /fp:fast or /fp:contract). SLEEF reconstructs the rounding error of an
-// unfused a*b, which a contracted FMA discards, so the ULP bounds below do not
-// hold without it. The `#pragma STDC FP_CONTRACT OFF` the headers carry is
-// honoured by Clang and ignored by GCC. esimd::esimd does not supply the flag,
-// as that would disable contraction in every TU linking it.
+// not /fp:fast or /fp:contract), as SLEEF requires of every TU using its inline
+// headers. SLEEF reconstructs the rounding error of an unfused a*b, which a
+// contracted FMA discards, so the ULP bounds below do not hold without it. The
+// contract-off pragma the headers carry is honoured by Clang and cl and ignored
+// by GCC; it is scoped to the SLEEF includes, so code after this header keeps
+// the TU's own contraction mode. esimd::esimd does not supply the flag, as that
+// would disable contraction in every TU linking it.
 //
 //   f(x)        SLEEF u10    -- <=1   ULP
 //   f_u35(x)    SLEEF u35    -- <=3.5 ULP, faster
 //   fast_f(x)   SLEEF u3500  -- float only, |x| < 125000
 //
 // Each width dispatches to the SLEEF build for that same instruction set. SLEEF
-// generates inline headers only for FMA-capable targets, so SSE4.2 and plain
-// AVX instead get a per-lane libm loop: ESIMD_TRIG_SLEEF (features.h) is 0 and
-// ESIMD_TRIG_SCALAR_FALLBACK is defined.
+// generates inline headers only for FMA-capable targets, so SSE4.2, plain AVX
+// and AVX2/AVX-512 built without FMA instead get a per-lane libm loop:
+// ESIMD_TRIG_SLEEF (features.h) is 0 and ESIMD_TRIG_SCALAR_FALLBACK is defined.
 
 #pragma once
 
@@ -46,6 +48,12 @@
 #  pragma warning(disable : 4576 4305)
 #endif
 
+// The SLEEF headers' contract-off pragma would otherwise last to the end of
+// the TU. Their functions keep it once inlined past the pop.
+#if defined(__clang__) || defined(_MSC_VER)
+#  pragma float_control(push)
+#endif
+
 #if !ESIMD_TRIG_SLEEF
 #  define ESIMD_TRIG_SCALAR_FALLBACK
 #elif ESIMD_ISA_NEON || ESIMD_ISA_NEON2X
@@ -62,6 +70,10 @@
 #  if ESIMD_ISA_AVX512
 #    include "detail/sleef/sleefinline_avx512f.h"
 #  endif
+#endif
+
+#if defined(__clang__) || defined(_MSC_VER)
+#  pragma float_control(pop)
 #endif
 
 #if defined(_MSC_VER) && !defined(__clang__)
@@ -135,6 +147,11 @@ namespace esimd
 #endif
 #if ESIMD_HAS_VDOUBLE4
   ESIMD_TRIG_SCALAR_DEFS(vdouble4)
+#endif
+#if ESIMD_HAS_VFLOAT16
+  ESIMD_TRIG_SCALAR_DEFS(vfloat16)
+  ESIMD_TRIG_SCALAR_FAST_DEFS(vfloat16)
+  ESIMD_TRIG_SCALAR_DEFS(vdouble8)
 #endif
 
 #undef ESIMD_TRIG_SCALAR_DEFS

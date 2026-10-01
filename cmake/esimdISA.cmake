@@ -10,7 +10,9 @@
 #   ESIMD_FLAGS_<ISA>            cached flag/define set for each ISA
 #                                (<ISA> = SSE42 | AVX | AVX2 | AVX512 | NEON | NEON2X)
 #   esimd_host_supports(<ISA> out)   sets `out` to whether the build host can
-#                                     execute that ISA (cached probe)
+#                                     execute that ISA (cached probe); when
+#                                     cross-compiling without an emulator,
+#                                     whether the compiler accepts it
 #   esimd_add_isa_target(name <ISA> SOURCES ... [LINKS ...] [LABELS ...])
 #                                adds an executable compiled with that ISA's
 #                                flags, linked to esimd::esimd. Host-gated unless
@@ -21,6 +23,7 @@
 # defines it; find_package(esimd) imports it).
 
 include_guard(GLOBAL)
+include(CheckCXXSourceCompiles)
 include(CheckCXXSourceRuns)
 
 # ----------------------------------------------------------------------------
@@ -55,14 +58,14 @@ else()
       -msse4.2 -D__SSE__ -D__SSE2__ -D__SSE4_1__ -D__SSE4_2__
       CACHE INTERNAL "esimd SSE4.2 flag/define set")
   set(ESIMD_FLAGS_AVX
-      -mavx -mbmi -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__BMI__
+      -mavx -D__AVX__ -D__SSE4_2__ -D__SSE4_1__
       CACHE INTERNAL "esimd AVX flag/define set")
   set(ESIMD_FLAGS_AVX2
       -mavx2 -mfma -mf16c -mbmi -mbmi2 -mlzcnt
       -D__AVX2__ -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__LZCNT__ -D__BMI__
       CACHE INTERNAL "esimd AVX2 flag/define set")
   set(ESIMD_FLAGS_AVX512
-      -march=skylake-avx512 -mavx2 -mfma -mf16c -mbmi -mbmi2 -mlzcnt
+      -mavx512f -mavx512vl -mavx512dq -mavx512bw -mavx2 -mfma -mf16c -mbmi -mbmi2 -mlzcnt
       -D__AVX512F__ -D__AVX512VL__ -D__AVX512DQ__ -D__AVX512BW__
       -D__AVX2__ -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__LZCNT__ -D__BMI__
       CACHE INTERNAL "esimd AVX512 flag/define set")
@@ -84,16 +87,6 @@ set(ESIMD_FLAGS_NEON2X
     -D__AVX2__ -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__BMI__ -D__BMI2__ -D__LZCNT__
     CACHE INTERNAL "esimd NEON2X (double pumped) flag/define set")
 
-# Which ISA family the *target* belongs to. Used to skip ISAs that cannot exist
-# on the target at all, before the (more expensive) host-execution probe.
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64|ARM64")
-  set(ESIMD_TARGET_ARM ON)
-else()
-  set(ESIMD_TARGET_ARM OFF)
-endif()
-set(ESIMD_ISAS_X86 SSE42 AVX AVX2 AVX512)
-set(ESIMD_ISAS_ARM NEON NEON2X)
-
 # ----------------------------------------------------------------------------
 # Host-ISA execution detection: does this machine execute <ISA> without SIGILL?
 # ----------------------------------------------------------------------------
@@ -109,14 +102,22 @@ function(esimd_host_supports isa outvar)
   elseif(isa STREQUAL "AVX2")
     set(probe "#include <immintrin.h>\nint main(){__m256i a=_mm256_set1_epi32(1);a=_mm256_add_epi32(a,a);return _mm256_extract_epi32(a,0)-2;}")
   elseif(isa STREQUAL "AVX512")
-    set(probe "#include <immintrin.h>\nint main(){__m512i a=_mm512_set1_epi32(1);a=_mm512_add_epi32(a,a);return (int)_mm512_reduce_add_epi32(a)/16-2;}")
+    # VL, BW and DQ too: an F-only part (Knights Landing) must fail the probe.
+    set(probe "#include <immintrin.h>\nint main(){__m512i a=_mm512_set1_epi32(1);a=_mm512_add_epi32(a,a);__m256i b=_mm256_mask_add_epi16(_mm256_set1_epi16(1),0xffff,_mm256_set1_epi16(1),_mm256_set1_epi16(1));__m512d d=_mm512_cvtepi64_pd(_mm512_set1_epi64(2));return (int)_mm512_reduce_add_epi32(a)/16+_mm256_extract_epi16(b,0)+(int)_mm512_reduce_add_pd(d)/8-6;}")
   elseif(isa STREQUAL "NEON" OR isa STREQUAL "NEON2X")
     set(probe "#include <arm_neon.h>\nint main(){int32x4_t a=vdupq_n_s32(1);return vgetq_lane_s32(vaddq_s32(a,a),0)-2;}")
   else()
     message(FATAL_ERROR "esimd_host_supports: unknown ISA '${isa}' (use SSE42|AVX|AVX2|AVX512|NEON|NEON2X)")
   endif()
-  check_cxx_source_runs("${probe}" ESIMD_HOST_RUNS_${isa})
-  set(${outvar} ${ESIMD_HOST_RUNS_${isa}} PARENT_SCOPE)
+  # try_run cannot execute a cross-compiled probe without an emulator; fall back
+  # to "compiles", and esimd_add_isa_target registers no tests in that case.
+  if(CMAKE_CROSSCOMPILING AND NOT CMAKE_CROSSCOMPILING_EMULATOR)
+    check_cxx_source_compiles("${probe}" ESIMD_HOST_COMPILES_${isa})
+    set(${outvar} ${ESIMD_HOST_COMPILES_${isa}} PARENT_SCOPE)
+  else()
+    check_cxx_source_runs("${probe}" ESIMD_HOST_RUNS_${isa})
+    set(${outvar} ${ESIMD_HOST_RUNS_${isa}} PARENT_SCOPE)
+  endif()
 endfunction()
 
 # ----------------------------------------------------------------------------
@@ -132,11 +133,15 @@ function(esimd_add_isa_target name isa)
                         "call find_package(esimd) or add_subdirectory(esimd) first")
   endif()
   cmake_parse_arguments(A "" "" "SOURCES;LINKS;LABELS" ${ARGN})
-  if(ESIMD_TARGET_ARM)
-    if(${isa} IN_LIST ESIMD_ISAS_X86)
+  # Skip ISAs the target architecture cannot have before the try_run probe.
+  # Computed here, not at include time: include_guard(GLOBAL) would leave a
+  # top-level variable undefined in other directory scopes.
+  set(arm_isas NEON NEON2X)
+  if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64|ARM64")
+    if(NOT isa IN_LIST arm_isas)
       return()
     endif()
-  elseif(${isa} IN_LIST ESIMD_ISAS_ARM)
+  elseif(isa IN_LIST arm_isas)
     return()
   endif()
   esimd_host_supports(${isa} host_ok)
@@ -150,7 +155,7 @@ function(esimd_add_isa_target name isa)
   target_compile_options(${name} PRIVATE ${ESIMD_FLAGS_${isa}} $<IF:$<BOOL:${MSVC}>,/W3,-Wall>)
   # Register a ctest entry only for labeled targets (tests). Unlabeled targets
   # (benchmarks, examples) build but are run manually.
-  if(host_ok AND A_LABELS)
+  if(host_ok AND A_LABELS AND NOT (CMAKE_CROSSCOMPILING AND NOT CMAKE_CROSSCOMPILING_EMULATOR))
     add_test(NAME ${name} COMMAND ${name})
     set_tests_properties(${name} PROPERTIES LABELS "${A_LABELS}")
   endif()

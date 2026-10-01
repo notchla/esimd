@@ -10,7 +10,7 @@
 // Build standalone (from this folder):
 //
 //   g++ -std=c++17 -I../../include \
-//       -march=skylake-avx512 -mavx2 -mfma -mf16c -mbmi -mbmi2 -mlzcnt \
+//       -mavx512f -mavx512vl -mavx512dq -mavx512bw -mavx2 -mfma -mf16c -mbmi -mbmi2 -mlzcnt \
 //       -D__AVX512F__ -D__AVX512VL__ -D__AVX512DQ__ -D__AVX512BW__ \
 //       -D__AVX2__ -D__AVX__ -D__SSE4_2__ -D__SSE4_1__ -D__LZCNT__ -D__BMI__ \
 //       avx512_example.cpp -o avx512_example

@@ -358,7 +358,7 @@ namespace esimd
     return x | (y << 1) | (z << 2);
   }
 
-#if defined(__AVX2__) && !defined(ESIMD_ARM64)
+#if defined(__BMI2__) && !defined(ESIMD_ARM64)
 
   template<>
     __forceinline unsigned int bitInterleave(const unsigned int &xi, const unsigned int& yi, const unsigned int& zi)

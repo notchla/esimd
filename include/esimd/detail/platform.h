@@ -65,6 +65,9 @@
 #  if defined(__AVX2__) && !defined(__FMA__)
 #    define __FMA__
 #  endif
+#  if defined(__AVX2__) && !defined(__BMI2__)
+#    define __BMI2__
+#  endif
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
