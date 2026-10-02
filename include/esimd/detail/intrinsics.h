@@ -199,7 +199,7 @@ namespace esimd
     asm volatile ("rdtsc" : "=d"(high), "=a"(low));
     return (((uint64_t)high) << 32) + (uint64_t)low;
 #else
-    /* Not supported yet, meaning measuring traversal cost per pixel does not work. */
+    /* no rdtsc without x86 inline asm */
     return 0;
 #endif
   }

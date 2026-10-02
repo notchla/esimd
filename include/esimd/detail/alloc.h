@@ -2,12 +2,8 @@
 // Copyright 2026 notchla liso.lorenzo@gmail.com
 // SPDX-License-Identifier: Apache-2.0
 //
-// Header-only replacement for embree's common/sys/alloc.h. The upstream header
-// declared alignedMalloc/alignedFree (defined in alloc.cpp) and defined the
-// ALIGNED_STRUCT_/ALIGNED_CLASS_ macros. Here alignedMalloc/alignedFree are
-// provided as inline wrappers over _mm_malloc/_mm_free so the SIMD library needs
-// no linked translation unit. Only the pieces the simd headers actually use are
-// kept (the aligned_allocator/os_allocator/IDPool templates are dropped).
+// alignedMalloc/alignedFree are inline over _mm_malloc/_mm_free so the library
+// needs no linked translation unit.
 
 #pragma once
 

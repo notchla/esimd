@@ -21,7 +21,6 @@ namespace esimd
   }
 #endif
 
-  /* header-only lookup tables (were extern in sse.cpp; now C++17 inline variables) */
   inline const __m128 mm_lookupmask_ps[16] = {
     _mm_castsi128_ps(_mm_set_epi32( 0, 0, 0, 0)),
     _mm_castsi128_ps(_mm_set_epi32( 0, 0, 0,-1)),

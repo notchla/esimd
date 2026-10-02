@@ -2,11 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Correctness tests for the AVX (256-bit) esimd types: the 8-wide vboolf8,
-// vint8, vuint8, vfloat8 and the 4-wide double vboold4, vdouble4. Each op is
-// checked element-by-element against a scalar reference. Compiled with plain
-// AVX flags (see tests/CMakeLists.txt), so the two-SSE-halves integer paths
-// (vint8_avx.h / vuint8_avx.h) are exercised here; AVX2 native paths are
-// covered separately in Phase 3.
+// vint8, vuint8, vfloat8 and the 4-wide double vboold4, vdouble4. Compiled with
+// plain AVX flags, so the integer types take the two-SSE-halves paths
+// (vint8_avx.h / vuint8_avx.h); test_avx2.cpp covers the native ones.
 
 #include <esimd/avx.h>
 #include "test_helpers.h"
@@ -210,7 +208,7 @@ TEST(vfloat8, rounding) {
   expect_eq(floor(v), {1.f, 1.f, -2.f, -2.f, 2.f, -3.f, 0.f, -1.f});
   expect_eq(ceil(v),  {2.f, 2.f, -1.f, -1.f, 3.f, -2.f, 1.f, 0.f});
 #if !defined(ESIMD_ARM64)
-  // NEON2X defines only floor/ceil for vfloat8; upstream has no trunc/round there.
+  // NEON2X has only floor/ceil for vfloat8: avx2neon emulates no other rounding.
   expect_eq(trunc(v), {1.f, 1.f, -1.f, -1.f, 2.f, -2.f, 0.f, 0.f});
 #endif
 }

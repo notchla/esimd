@@ -716,10 +716,9 @@ TEST(Vec3fa, select_rounding_maxDim) {
   EXPECT_EQ(floor(Vec3fa(1.7f, -1.2f, 2.5f)).y, -2.f);
   EXPECT_EQ(ceil(Vec3fa(1.2f, -1.7f, 2.5f)).x, 2.f);
   EXPECT_EQ(ceil(Vec3fa(1.2f, -1.7f, 2.5f)).y, -1.f);
-  // trunc is inconsistent upstream and the port keeps that: on ARM it is
-  // vrndq_f32 (round toward zero) but on x86 it is _mm_round_ps with
-  // _MM_FROUND_TO_NEAREST_INT, which rounds. Only the fractions where the two
-  // agree are asserted here; see the README.
+  // trunc differs by ISA: on ARM it is vrndq_f32 (round toward zero) but on x86
+  // it is _mm_round_ps with _MM_FROUND_TO_NEAREST_INT, which rounds. Only the
+  // fractions where the two agree are asserted here.
   EXPECT_EQ(trunc(Vec3fa(1.4f, -1.4f, 0.25f)).x, 1.f);
   EXPECT_EQ(trunc(Vec3fa(1.4f, -1.4f, 0.25f)).y, -1.f);
   EXPECT_EQ(trunc(Vec3fa(1.4f, -1.4f, 0.25f)).z, 0.f);

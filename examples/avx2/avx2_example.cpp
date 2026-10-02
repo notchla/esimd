@@ -46,13 +46,12 @@ int main() {
             << ", reduce_max(a) = " << reduce_max(a) << "\n";
 
 #if !defined(ESIMD_ARM64)
-  // Cross-lane permute: reverse the 8 lanes. index[i] picks source lane index[i].
-  // x86-only -- upstream provides no NEON2X equivalent.
+  // Cross-lane permute: index[i] picks source lane index[i]. x86-only, as
+  // avx2neon has no cross-lane permute.
   const __m256i reverse = _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0);
   print("permute(a, reverse)", permute(a, reverse), 8);
 #endif
 
-  // Unsigned native min/max.
   const vuint8 u(10u, 40u, 20u, 30u, 60u, 50u, 80u, 70u);
   print("u", u, 8);
   print("min(u, 45)", min(u, vuint8(45u)), 8);

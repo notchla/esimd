@@ -3,9 +3,8 @@
 #
 # esimdISA — reusable per-ISA build helper for the header-only esimd library.
 #
-# This module is self-contained and safe to include() from anywhere: the esimd
-# project's own build includes it, and downstream consumers get it too (the
-# installed package config include()s it). It provides:
+# Self-contained and safe to include() from anywhere; the installed package
+# config include()s it. It provides:
 #
 #   ESIMD_FLAGS_<ISA>            cached flag/define set for each ISA
 #                                (<ISA> = SSE42 | AVX | AVX2 | AVX512 | NEON | NEON2X)
@@ -94,7 +93,6 @@ function(esimd_host_supports isa outvar)
   # CMAKE_REQUIRED_FLAGS must be a single space-separated string, not a list,
   # or check_cxx_source_runs mis-forwards the -D defines into try_run's cmake args.
   string(REPLACE ";" " " CMAKE_REQUIRED_FLAGS "${ESIMD_FLAGS_${isa}}")
-  # Probe a representative intrinsic per ISA.
   if(isa STREQUAL "SSE42")
     set(probe "#include <immintrin.h>\nint main(){__m128i a=_mm_set1_epi32(1);return _mm_extract_epi32(a,0)-1;}")
   elseif(isa STREQUAL "AVX")
@@ -153,8 +151,7 @@ function(esimd_add_isa_target name isa)
   target_link_libraries(${name} PRIVATE esimd::esimd ${A_LINKS})
   # cl's /Wall also enables its off-by-default warnings, so it gets /W3.
   target_compile_options(${name} PRIVATE ${ESIMD_FLAGS_${isa}} $<IF:$<BOOL:${MSVC}>,/W3,-Wall>)
-  # Register a ctest entry only for labeled targets (tests). Unlabeled targets
-  # (benchmarks, examples) build but are run manually.
+  # Unlabeled targets (benchmarks, examples) are built but not run by ctest.
   if(host_ok AND A_LABELS AND NOT (CMAKE_CROSSCOMPILING AND NOT CMAKE_CROSSCOMPILING_EMULATOR))
     add_test(NAME ${name} COMMAND ${name})
     set_tests_properties(${name} PROPERTIES LABELS "${A_LABELS}")

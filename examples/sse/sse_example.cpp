@@ -45,18 +45,17 @@ int main() {
   print("madd(a,2,b) = a*2+b", madd(a, vfloat4(2.0f), b));
 
   // Length via dot + sqrt, and a fast normalize via rsqrt (Newton-refined in the
-  // library). reduce_add collapses the 4 lanes to a scalar.
+  // library).
   const float len_a = std::sqrt(dot(a, a));
   std::cout << "dot(a,a) = " << dot(a, a) << ", |a| = " << len_a << "\n";
   const vfloat4 a_hat = a * rsqrt(vfloat4(dot(a, a)));
   print("normalize(a)", a_hat);
   std::cout << "|normalize(a)| ~ " << std::sqrt(dot(a_hat, a_hat)) << "\n";
 
-  // Cross product (esimd provides cross() for vfloat4).
   print("cross(a,b)", cross(a, b));
 
   // Comparisons yield a vboolf4 mask; select() blends lane-wise.
-  const vboolf4 mask = a < b; // lanewise a < b
+  const vboolf4 mask = a < b;
   std::cout << "movemask(a < b) = 0x" << std::hex << movemask(mask) << std::dec << "\n";
   print("select(a<b, a, b)  (min per lane)", select(mask, a, b));
   print("max(a, b)", max(a, b));

@@ -37,7 +37,7 @@ int main() {
   alignas(32) float xs[8] = {0, 1, 2, 3, 4, 5, 6, 7};
   const vfloat8 x = vfloat8::load(xs);
   const vfloat8 a(3.0f), b(1.0f);
-  const vfloat8 y = madd(a, x, b); // a*x + b, one FMA across 8 lanes
+  const vfloat8 y = madd(a, x, b);
   print("x", x, 8);
   print("y = 3*x + 1", y, 8);
 

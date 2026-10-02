@@ -39,15 +39,14 @@ int main() {
 
   // 16 lanes {0..15} in one register; a single FMA over all of them.
   const vfloat16 x(step);          // 0,1,2,...,15
-  const vfloat16 y = madd(x, vfloat16(2.0f), vfloat16(1.0f)); // 2*x + 1
+  const vfloat16 y = madd(x, vfloat16(2.0f), vfloat16(1.0f));
   print("x", x, 16);
   print("y = 2*x + 1", y, 16);
   std::cout << "reduce_add(x) = " << reduce_add(x)
             << ", reduce_max(x) = " << reduce_max(x) << "\n";
 
-  // Mask registers: build a vboolf16 from a comparison, inspect it, and use it to
-  // blend. Keep x where x is even, else -1  (mask via (x mod 2 == 0) emulated with
-  // a compare on a precomputed vector).
+  // Mask registers: a vboolf16 from a comparison drives a blend that keeps x in
+  // the even lanes and -1 elsewhere.
   alignas(64) float evenv[16];
   for (int i = 0; i < 16; ++i) evenv[i] = (i % 2 == 0) ? 1.0f : 0.0f;
   const vboolf16 even = vfloat16::load(evenv) == vfloat16(1.0f);

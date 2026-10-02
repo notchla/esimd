@@ -399,8 +399,8 @@ ESIMD_VEC2_TESTS(Vec2_vfloat8, vfloat8)
 ESIMD_VEC2_TESTS(Vec2_vfloat16, vfloat16)
 #endif
 
-// frac() exists for vfloat4 and vfloat8 only -- upstream parity, so
-// Vec2<vfloat16> has no frac either.
+// frac() exists for vfloat4 and vfloat8 only (as in embree), so Vec2<vfloat16>
+// has no frac either.
 TEST(Vec2_vfloat4, frac) {
   const Vec2<vfloat4> a(vfloat4(1.25f), vfloat4(-1.25f));
   expect_lanes(frac(a).x, [](int) { return 0.25f; }, 1e-6f);

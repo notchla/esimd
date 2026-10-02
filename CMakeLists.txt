@@ -67,21 +67,17 @@ if(ESIMD_INSTALL)
 
   set(ESIMD_CMAKE_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/esimd")
 
-  # Headers (the whole header-only library).
   install(DIRECTORY include/esimd DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-  # The interface target -> esimdTargets.cmake (namespaced esimd::).
   install(TARGETS esimd EXPORT esimdTargets)
   install(EXPORT esimdTargets
           NAMESPACE esimd::
           FILE esimdTargets.cmake
           DESTINATION ${ESIMD_CMAKE_DIR})
 
-  # The reusable ISA helper module, shipped alongside the config.
   install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/esimdISA.cmake"
           DESTINATION ${ESIMD_CMAKE_DIR})
 
-  # Generate and install esimdConfig.cmake + version file.
   configure_package_config_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/esimdConfig.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/esimdConfig.cmake"

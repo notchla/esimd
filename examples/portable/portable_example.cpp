@@ -56,7 +56,7 @@ static void saxpy(float a, const float* x, const float* b, float* y, int n) {
   for (; i + VSIZEX <= n; i += VSIZEX) {
     const vfloatx vx = vfloatx::loadu(x + i);
     const vfloatx vb = vfloatx::loadu(b + i);
-    vfloatx::storeu(y + i, madd(va, vx, vb)); // va*vx + vb
+    vfloatx::storeu(y + i, madd(va, vx, vb));
   }
 
   // Tail: the last (n - i) elements don't fill a full vector. Build a predicate
@@ -100,7 +100,6 @@ int main() {
   for (int i = 0; i < N; ++i) std::cout << (i ? ", " : "") << y[i];
   std::cout << "]\n";
 
-  // Verify against a plain scalar reference.
   bool ok = true;
   for (int i = 0; i < N; ++i)
     if (y[i] != 2.0f * x[i] + b[i]) ok = false;

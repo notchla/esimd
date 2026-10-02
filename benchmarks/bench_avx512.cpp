@@ -3,7 +3,7 @@
 //
 // Representative micro-benchmarks for the AVX512 types (vfloat16, vint16,
 // vdouble8). These track relative regressions, not absolute performance.
-// (AVX512 downclocking can make these noisy; use for regression tracking only.)
+// AVX512 downclocking can make these noisy.
 
 #include <esimd/avx.h>
 #include <benchmark/benchmark.h>

@@ -188,7 +188,7 @@ TEST(Quaternion3f, algebra) {
   EXPECT_EQ(m.k, 4.f);
   m *= 2.f;
   EXPECT_EQ(m.k, 8.f);
-  /* /= by a scalar is a * rcp(b) upstream, so it is not bit-exact */
+  /* /= by a scalar is a * rcp(b), so it is not bit-exact */
   m /= 2.f;
   EXPECT_NEAR(m.k, 4.f, 1e-5f);
 }
@@ -234,8 +234,8 @@ TEST(fastapprox, scalar) {
   fastapprox::sincos(0.7f, s, c);
   EXPECT_NEAR(s, std::sin(0.7f), 1e-4f);
   EXPECT_NEAR(c, std::cos(0.7f), 1e-4f);
-  // This covers every entry point fastapprox still declares. Upstream's atan,
-  // atan2 and pow are gone: they could not be instantiated at any T.
+  // That is every fastapprox entry point: embree's atan, atan2 and pow are not
+  // provided, as they could not be instantiated at any T.
 }
 
 ////////////////////////////////////////////////////////////////////////////////

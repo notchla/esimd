@@ -1,9 +1,8 @@
 # Copyright 2009-2021 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-# One test executable per ISA. Each compiles the same assertions with that ISA's
-# flags, so every backend is validated. Host-unsupported ISAs are skipped by
-# esimd_add_isa_target.
+# One test executable per ISA, each compiling the same assertions with that
+# ISA's flags.
 
 esimd_add_isa_target(esimd_test_sse42 SSE42
   SOURCES test_sse.cpp
@@ -59,9 +58,8 @@ esimd_add_isa_target(esimd_test_integration_avx512 AVX512
   LINKS   GTest::gtest_main
   LABELS  avx512 integration)
 
-# ARM: the same assertions, compiled against the NEON backends. NEON is 4-wide
-# (so it runs the SSE suite) and NEON2X is double-pumped 8-wide (so it runs the
-# AVX2 suite). Skipped automatically when the target is not AArch64.
+# ARM: NEON is 4-wide, so it runs the SSE suite; NEON2X is double-pumped
+# 8-wide, so it runs the AVX and AVX2 suites.
 esimd_add_isa_target(esimd_test_neon NEON
   SOURCES test_sse.cpp
   LINKS   GTest::gtest_main
@@ -138,8 +136,7 @@ foreach(t esimd_test_trig_sse42 esimd_test_trig_avx
   endif()
 endforeach()
 
-# Optional data-types layer (<esimd/types.h>), on every ISA: Vec2<T> is checked
-# at T = scalar and at every vector width the backend defines, plus Vec2fa.
+# Optional data-types layer (<esimd/types.h>), on every ISA.
 esimd_add_isa_target(esimd_test_vec2_sse42 SSE42
   SOURCES test_vec2.cpp
   LINKS   GTest::gtest_main
@@ -170,8 +167,6 @@ esimd_add_isa_target(esimd_test_vec2_neon2x NEON2X
   LINKS   GTest::gtest_main
   LABELS  neon2x vec2)
 
-# Same, for Vec3<T> and the three SSE companions vec3.h brings with it
-# (Vec3ba / Vec3ia / Vec3fa+Vec3fx).
 esimd_add_isa_target(esimd_test_vec3_sse42 SSE42
   SOURCES test_vec3.cpp
   LINKS   GTest::gtest_main
@@ -202,7 +197,6 @@ esimd_add_isa_target(esimd_test_vec3_neon2x NEON2X
   LINKS   GTest::gtest_main
   LABELS  neon2x vec3)
 
-# Same, for Vec4<T>
 esimd_add_isa_target(esimd_test_vec4_sse42 SSE42
   SOURCES test_vec4.cpp
   LINKS   GTest::gtest_main
@@ -233,7 +227,6 @@ esimd_add_isa_target(esimd_test_vec4_neon2x NEON2X
   LINKS   GTest::gtest_main
   LABELS  neon2x vec4)
 
-# LinearSpace2<T> / LinearSpace3<T>, the 2x2 and 3x3 matrices built on Vec2/Vec3.
 esimd_add_isa_target(esimd_test_linearspace_sse42 SSE42
   SOURCES test_linearspace.cpp
   LINKS   GTest::gtest_main
@@ -264,8 +257,6 @@ esimd_add_isa_target(esimd_test_linearspace_neon2x NEON2X
   LINKS   GTest::gtest_main
   LABELS  neon2x linearspace)
 
-# QuaternionT<T> and the fastapprox transcendentals, pulled in as LinearSpace3's
-# construction-from-quaternion dependency.
 esimd_add_isa_target(esimd_test_quaternion_sse42 SSE42
   SOURCES test_quaternion.cpp
   LINKS   GTest::gtest_main

@@ -2,11 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Correctness tests for the AVX2 native-integer esimd paths: vint8_avx2.h,
-// vuint8_avx2.h and the 4-wide 64-bit vllong4_avx2.h. Compiled with AVX2 flags
-// (see tests/CMakeLists.txt), so avx.h selects these native paths over the
-// two-SSE-halves plain-AVX integer headers. Where an operation has the same
-// semantics as the plain-AVX backend (Phase 2), the expected values match; the
-// point here is that the AVX2 codegen produces identical results.
+// vuint8_avx2.h and the 4-wide 64-bit vllong4_avx2.h. Compiled with AVX2 flags,
+// so avx.h selects these over the two-SSE-halves headers. Expected values match
+// test_avx.cpp wherever the semantics are shared: the AVX2 codegen must produce
+// identical results.
 
 #include <esimd/avx.h>
 #include "test_helpers.h"
@@ -44,7 +43,7 @@ TEST(vint8_avx2, compare_min_max_select_reduce) {
 TEST(vint8_avx2, permute_and_shuffle) {
   const vint8 v(10, 11, 12, 13, 14, 15, 16, 17);
 #if !defined(ESIMD_ARM64)
-  // permute() is x86-only: upstream provides no NEON2X cross-lane permute.
+  // permute() is x86-only: avx2neon has no cross-lane permute.
   const __m256i rev = _mm256_setr_epi32(7, 6, 5, 4, 3, 2, 1, 0);
   expect_eq(permute(v, rev), {17, 16, 15, 14, 13, 12, 11, 10}); // cross-lane permute
 #endif
