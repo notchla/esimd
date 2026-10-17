@@ -256,6 +256,17 @@ TEST(vfloat4, isnan) {
   expect_mask(isnan(vfloat4(1.f, NAN, 3.f, NAN)), {false, true, false, true});
 }
 
+TEST(vfloat4, deinterleave) {
+  const float buf[9] = {-1.f, 0.f, 10.f, 1.f, 11.f, 2.f, 12.f, 3.f, 13.f};
+  vfloat4 x, y;
+  deinterleave(buf + 1, x, y);
+  expect_eq(x, {0.f, 1.f, 2.f, 3.f});
+  expect_eq(y, {10.f, 11.f, 12.f, 13.f});
+  deinterleave_unordered(buf + 1, x, y);
+  expect_eq(x, {0.f, 1.f, 2.f, 3.f});
+  expect_eq(y, {10.f, 11.f, 12.f, 13.f});
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // vboold2 / vdouble2 / vllong2  (128-bit, 2-wide 64-bit)
 ////////////////////////////////////////////////////////////////////////////////

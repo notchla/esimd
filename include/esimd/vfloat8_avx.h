@@ -807,6 +807,21 @@ __forceinline vfloat8 abs(const vfloat8& a) {
     const vfloat8 a6 = select<0x55 /* 0b01010101 */>(c5,d5);
     return a6;
   }
+
+  // x = {x0,...,x7}; reads 16 floats, no alignment required.
+  __forceinline void deinterleave(const float* xy, vfloat8& x, vfloat8& y) {
+    const __m256 a = _mm256_loadu_ps(xy), b = _mm256_loadu_ps(xy + 8);
+    const __m256 lo = _mm256_permute2f128_ps(a, b, 0x20), hi = _mm256_permute2f128_ps(a, b, 0x31);
+    x = _mm256_shuffle_ps(lo, hi, _MM_SHUFFLE(2,0,2,0));
+    y = _mm256_shuffle_ps(lo, hi, _MM_SHUFFLE(3,1,3,1));
+  }
+
+  // x = {x0,x1,x4,x5,x2,x3,x6,x7}; two fewer cross-lane shuffles than deinterleave.
+  __forceinline void deinterleave_unordered(const float* xy, vfloat8& x, vfloat8& y) {
+    const __m256 a = _mm256_loadu_ps(xy), b = _mm256_loadu_ps(xy + 8);
+    x = _mm256_shuffle_ps(a, b, _MM_SHUFFLE(2,0,2,0));
+    y = _mm256_shuffle_ps(a, b, _MM_SHUFFLE(3,1,3,1));
+  }
 }
 
 #undef vboolf

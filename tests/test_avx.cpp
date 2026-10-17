@@ -225,6 +225,21 @@ TEST(vfloat8, movement_and_reductions) {
   EXPECT_FLOAT_EQ(toScalar(vfloat8(9, 0, 0, 0, 0, 0, 0, 0)), 9.f);
 }
 
+TEST(vfloat8, deinterleave) {
+  float buf[17] = {-1.f};
+  for (int i = 0; i < 8; ++i) {
+    buf[1 + 2 * i] = float(i);
+    buf[2 + 2 * i] = float(10 + i);
+  }
+  vfloat8 x, y;
+  deinterleave(buf + 1, x, y);
+  expect_eq(x, {0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f});
+  expect_eq(y, {10.f, 11.f, 12.f, 13.f, 14.f, 15.f, 16.f, 17.f});
+  deinterleave_unordered(buf + 1, x, y);
+  expect_eq(x, {0.f, 1.f, 4.f, 5.f, 2.f, 3.f, 6.f, 7.f});
+  expect_eq(y, {10.f, 11.f, 14.f, 15.f, 12.f, 13.f, 16.f, 17.f});
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // vboold4 / vdouble4  (256-bit, 4-wide double)
 ////////////////////////////////////////////////////////////////////////////////

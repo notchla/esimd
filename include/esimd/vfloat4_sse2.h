@@ -807,6 +807,17 @@ namespace esimd
     return shuffle<1,2,0,3>(msub(a0,b0,a1*b1));
   }
 
+  // Reads 8 floats, no alignment required.
+  __forceinline void deinterleave(const float* xy, vfloat4& x, vfloat4& y) {
+    const __m128 a = _mm_loadu_ps(xy), b = _mm_loadu_ps(xy + 4);
+    x = _mm_shuffle_ps(a, b, _MM_SHUFFLE(2,0,2,0));
+    y = _mm_shuffle_ps(a, b, _MM_SHUFFLE(3,1,3,1));
+  }
+
+  // One shuffle per output already keeps the order, so this is deinterleave.
+  __forceinline void deinterleave_unordered(const float* xy, vfloat4& x, vfloat4& y) {
+    deinterleave(xy, x, y);
+  }
 }
 
 #undef vboolf

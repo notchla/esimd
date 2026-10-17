@@ -604,6 +604,20 @@ namespace esimd
   __forceinline vfloat16 rcp_safe(const vfloat16& a) {
     return rcp(select(a != vfloat16(zero), a, vfloat16(min_rcp_input)));
   }
+
+  // x = {x0,...,x15}; reads 32 floats, no alignment required.
+  __forceinline void deinterleave(const float* xy, vfloat16& x, vfloat16& y) {
+    const __m512 a = _mm512_loadu_ps(xy), b = _mm512_loadu_ps(xy + 16);
+    x = _mm512_permutex2var_ps(a, _mm512_set_epi32(30, 28, 26, 24, 22, 20, 18, 16, 14, 12, 10, 8, 6, 4, 2, 0), b);
+    y = _mm512_permutex2var_ps(a, _mm512_set_epi32(31, 29, 27, 25, 23, 21, 19, 17, 15, 13, 11, 9, 7, 5, 3, 1), b);
+  }
+
+  // x = {x0,x1,x8,x9,x2,x3,x10,x11,x4,x5,x12,x13,x6,x7,x14,x15}; in-lane shuffles, lower latency than deinterleave.
+  __forceinline void deinterleave_unordered(const float* xy, vfloat16& x, vfloat16& y) {
+    const __m512 a = _mm512_loadu_ps(xy), b = _mm512_loadu_ps(xy + 16);
+    x = _mm512_shuffle_ps(a, b, _MM_SHUFFLE(2,0,2,0));
+    y = _mm512_shuffle_ps(a, b, _MM_SHUFFLE(3,1,3,1));
+  }
 }
 
 #undef vboolf

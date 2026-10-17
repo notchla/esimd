@@ -171,6 +171,22 @@ TEST(vfloat16, compare_select_round) {
                       2.f, 2.f, 2.f, 2.f, 2.f, 2.f, 2.f, 2.f});
 }
 
+TEST(vfloat16, deinterleave) {
+  float buf[33];
+  buf[0] = -1.f;
+  for (int k = 0; k < 16; ++k) {
+    buf[1 + 2 * k] = float(k);
+    buf[2 + 2 * k] = float(20 + k);
+  }
+  vfloat16 x, y;
+  deinterleave(buf + 1, x, y);
+  expect_eq(x, {0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f});
+  expect_eq(y, {20.f, 21.f, 22.f, 23.f, 24.f, 25.f, 26.f, 27.f, 28.f, 29.f, 30.f, 31.f, 32.f, 33.f, 34.f, 35.f});
+  deinterleave_unordered(buf + 1, x, y);
+  expect_eq(x, {0.f, 1.f, 8.f, 9.f, 2.f, 3.f, 10.f, 11.f, 4.f, 5.f, 12.f, 13.f, 6.f, 7.f, 14.f, 15.f});
+  expect_eq(y, {20.f, 21.f, 28.f, 29.f, 22.f, 23.f, 30.f, 31.f, 24.f, 25.f, 32.f, 33.f, 26.f, 27.f, 34.f, 35.f});
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // vboold8 / vdouble8 / vllong8  (8-wide)
 ////////////////////////////////////////////////////////////////////////////////
